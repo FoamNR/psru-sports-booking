@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>กฎระเบียบการใช้งาน - มรภ.พิบูลสงคราม</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        psruGreen: '#01a715',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Prompt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+    </style>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Common JS Layout & Auth Controller -->
+    <script src="js/layout.js"></script>
+</head>
+<body class="bg-white text-gray-800 min-h-screen flex flex-col">
+
+    <!-- Navbar Container -->
+    <div id="navbar-container"></div>
+
+    <!-- 2. MAIN CONTENT -->
+    <main class="flex-grow max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+        
+        <!-- Header Page -->
+        <div class="mb-8 text-center md:text-left">
+            <h1 class="text-2xl font-bold text-gray-900 tracking-tight flex items-center justify-center md:justify-start space-x-2">
+                <i data-lucide="shield-alert" class="w-6 h-6 text-psruGreen"></i>
+                <span>กฎระเบียบและข้อควรปฏิบัติ</span>
+            </h1>
+            <p class="text-sm text-gray-500 mt-1">ข้อตกลงในการร่วมใช้งานพื้นที่สวัสดิการสนามกีฬา มหาวิทยาลัยราชภัฏพิบูลสงคราม</p>
+        </div>
+
+        <!-- กล่องไฮไลต์สำคัญ (สำคัญมาก) -->
+        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-8 flex items-start space-x-3.5">
+            <div class="w-9 h-9 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600 flex-shrink-0">
+                <i data-lucide="info" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h4 class="font-bold text-sm text-amber-900">มาตรการรักษาสิทธิ์และการงดเข้าใช้ (Blacklist)</h4>
+                <p class="text-xs text-amber-700 leading-relaxed mt-1">
+                    เนื่องจากเป็นบริการสวัสดิการฟรีเพื่อนักศึกษาทุกคน หากนักศึกษาทำการจองสนามแล้ว **ไม่มาเข้าใช้งาน (No-show) เกิน 2 ครั้งต่อเดือน** โดยไม่มีการกดยกเลิกสิทธิ์ล่วงหน้า ระบบจะทำการระงับสิทธิ์การจองคิวอัตโนมัติเป็นเวลา 14 วัน
+                </p>
+            </div>
+        </div>
+
+        <!-- รายการข้อบังคับแบ่งตามหัวข้อ -->
+        <div class="space-y-6">
+            
+            <!-- หมวดหมู่ที่ 1 -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                <h3 class="text-base font-bold text-gray-900 flex items-center mb-4 pb-2 border-b border-gray-100">
+                    <span class="w-1 h-5 bg-psruGreen rounded-full mr-2.5"></span>
+                    <span>1. กฎระเบียบทั่วไปในการจองและใช้งาน</span>
+                </h3>
+                <ul class="space-y-3">
+                    <li class="flex items-start space-x-2.5 text-xs text-gray-600 leading-relaxed">
+                        <i data-lucide="check" class="w-4 h-4 text-psruGreen flex-shrink-0 mt-0.5"></i>
+                        <span>นักศึกษา 1 คน มีสิทธิ์จองสนามกีฬาได้ **ไม่เกิน 1 ชั่วโมงต่อวัน** และจองล่วงหน้าได้ไม่เกิน 3 วัน</span>
+                    </li>
+                    <li class="flex items-start space-x-2.5 text-xs text-gray-600 leading-relaxed">
+                        <i data-lucide="check" class="w-4 h-4 text-psruGreen flex-shrink-0 mt-0.5"></i>
+                        <span>ต้องแสดง **รหัสคิวการจอง** บนหน้าจอมือถือ พร้อมบัตรประจำตัวนักศึกษาต่อเจ้าหน้าที่ประจำสนามก่อนเข้าใช้งาน</span>
+                    </li>
+                    <li class="flex items-start space-x-2.5 text-xs text-gray-600 leading-relaxed">
+                        <i data-lucide="check" class="w-4 h-4 text-psruGreen flex-shrink-0 mt-0.5"></i>
+                        <span>หากต้องการยกเลิกการจอง จะต้องดำเนินการยกเลิกในระบบ **ล่วงหน้าอย่างน้อย 1 ชั่วโมง** ก่อนถึงเวลาใช้งานจริง</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- หมวดหมู่ที่ 2 -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                <h3 class="text-base font-bold text-gray-900 flex items-center mb-4 pb-2 border-b border-gray-100">
+                    <span class="w-1 h-5 bg-psruGreen rounded-full mr-2.5"></span>
+                    <span>2. อุปกรณ์และการแต่งกาย</span>
+                </h3>
+                <ul class="space-y-3">
+                    <li class="flex items-start space-x-2.5 text-xs text-gray-600 leading-relaxed">
+                        <i data-lucide="check" class="w-4 h-4 text-psruGreen flex-shrink-0 mt-0.5"></i>
+                        <span>ผู้เข้าเล่นต้องแต่งกายด้วย **ชุดกีฬาที่สุภาพ** และสวมรองเท้ากีฬาที่เหมาะสมกับประเภทของสนามนั้นๆ</span>
+                    </li>
+                    <li class="flex items-start space-x-2.5 text-xs text-gray-600 leading-relaxed">
+                        <i data-lucide="check" class="w-4 h-4 text-psruGreen flex-shrink-0 mt-0.5"></i>
+                        <span>สำหรับการใช้งานโรงยิมในร่ม (ฟุตซอล, แบดมินตัน) รองเท้าจะต้องเป็น **พื้นยางดิกพื้นเรียบ (Non-marking)** เพื่อรักษาพื้นผิวปาร์เก้และยางสังเคราะห์</span>
+                    </li>
+                    <li class="flex items-start space-x-2.5 text-xs text-gray-600 leading-relaxed">
+                        <i data-lucide="check" class="w-4 h-4 text-psruGreen flex-shrink-0 mt-0.5"></i>
+                        <span>ในกรณีที่ขอยืมอุปกรณ์กีฬาจากกองพัฒนานักศึกษา จะต้องทำการส่งคืนสภาพเดิมครบถ้วนภายในเวลาที่กำหนด</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- หมวดหมู่ที่ 3 -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                <h3 class="text-base font-bold text-gray-900 flex items-center mb-4 pb-2 border-b border-gray-100">
+                    <span class="w-1 h-5 bg-psruGreen rounded-full mr-2.5"></span>
+                    <span>3. ข้อห้ามและการรักษาความสะอาด</span>
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="flex items-center space-x-3 bg-red-50 text-red-700 p-3 rounded-xl border border-red-100 text-xs">
+                        <i data-lucide="ban" class="w-5 h-5 flex-shrink-0"></i>
+                        <span>ห้ามนำอาหาร น้ำหวาน และของขบเคี้ยวทุกชนิดเข้ามาในบริเวณพื้นผิวที่ใช้เล่นกีฬา (อนุญาตเฉพาะน้ำดื่มสะอาด)</span>
+                    </div>
+                    <div class="flex items-center space-x-3 bg-red-50 text-red-700 p-3 rounded-xl border border-red-100 text-xs">
+                        <i data-lucide="ban" class="w-5 h-5 flex-shrink-0"></i>
+                        <span>ห้ามทิ้งขยะไวในสนาม เมื่อใช้งานเสร็จให้นำขยะไปทิ้ง ณ จุดบริการแยกขยะภายนอกอาคาร</span>
+                    </div>
+                    <div class="flex items-center space-x-3 bg-red-50 text-red-700 p-3 rounded-xl border border-red-100 text-xs">
+                        <i data-lucide="ban" class="w-5 h-5 flex-shrink-0"></i>
+                        <span>ห้ามสูบบุหรี่ บุหรี่ไฟฟ้า หรือนำสิ่งเสพติดและเครื่องดื่มแอลกอฮอล์ทุกประเภทเข้ามาในบริเวณศูนย์กีฬาโดยเด็ดขาด</span>
+                    </div>
+                    <div class="flex items-center space-x-3 bg-red-50 text-red-700 p-3 rounded-xl border border-red-100 text-xs">
+                        <i data-lucide="ban" class="w-5 h-5 flex-shrink-0"></i>
+                        <span>ห้ามทะเลาะวิวาท เล่นการพนัน หรือประพฤติตนขัดต่อศีลธรรมอันดีภายในสถานศึกษา</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- หมวดหมู่ที่ 4 -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                <h3 class="text-base font-bold text-gray-900 flex items-center mb-4 pb-2 border-b border-gray-100">
+                    <span class="w-1 h-5 bg-psruGreen rounded-full mr-2.5"></span>
+                    <span>4. การดูแลทรัพย์สินและความเสียหาย</span>
+                </h3>
+                <ul class="space-y-3">
+                    <li class="flex items-start space-x-2.5 text-xs text-gray-600 leading-relaxed">
+                        <i data-lucide="check" class="w-4 h-4 text-psruGreen flex-shrink-0 mt-0.5"></i>
+                        <span>มหาวิทยาลัยจะไม่รับผิดชอบต่อการสูญหายหรือเสียหายของทรัพย์สินส่วนตัวผู้ใช้งานในทุกกรณี โปรดดูแลของมีค่าของท่านอย่างระมัดระวัง</span>
+                    </li>
+                    <li class="flex items-start space-x-2.5 text-xs text-gray-600 leading-relaxed">
+                        <i data-lucide="check" class="w-4 h-4 text-psruGreen flex-shrink-0 mt-0.5"></i>
+                        <span>หากผู้ใช้งานทำให้อุปกรณ์ ตาข่าย พื้นสนาม หรือทรัพย์สินของทางมหาวิทยาลัยชำรุดเสียหายอันเกิดจากการใช้งานที่ผิดประเภท คณะหรือกลุ่มผู้จองจะต้องเป็นผู้รับผิดชอบชดใช้ค่าเสียหายตามจริง</span>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer Container -->
+    <div id="footer-container"></div>
+
+    <script>
+        checkAuth('student');
+        loadLayout();
+    </script>
+</body>
+</html>

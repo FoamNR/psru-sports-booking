@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เพิ่มสนามกีฬาแห่งใหม่ - PSRU Sports Admin</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        psruGreen: '#01a715',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Prompt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+    </style>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Common JS Layout & Auth Controller -->
+    <script src="../js/layout.js"></script>
+</head>
+<body class="bg-white text-gray-800 min-h-screen flex flex-col">
+
+    <!-- 1. NAVIGATION BAR -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3">
+                    <img src="../logo.png" alt="PSRU Sports Logo" class="w-9 h-9 object-contain">
+                    <div>
+                        <span class="font-bold text-base text-gray-950 block leading-tight">PSRU Admin</span>
+                        <span class="text-xs text-gray-400 font-medium">จัดการข้อมูลระบบส่วนกลาง</span>
+                    </div>
+                </div>
+                <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-xl">
+                    โหมด: เพิ่มข้อมูลสนาม
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 2. MAIN WORKSPACE / FORM -->
+    <main class="flex-grow max-w-4xl mx-auto px-4 sm:px-6 py-8 w-full">
+        
+        <!-- ปุ่มย้อนกลับ -->
+        <a href="dashboard.html" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-psruGreen mb-6 transition-colors group">
+            <i data-lucide="arrow-left" class="w-4 h-4 mr-1.5 transition-transform group-hover:-translate-x-1"></i>
+            <span>ย้อนกลับไปแผงควบคุมแอดมิน</span>
+        </a>
+
+        <!-- Display error alert if any -->
+        <div id="error-alert" class="hidden mb-6 bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 font-medium text-xs flex items-center space-x-2 shadow-sm">
+            <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0"></i>
+            <span id="error-alert-text"></span>
+        </div>
+
+        <!-- กล่องฟอร์มหลัก -->
+        <div class="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="p-6 sm:p-8 border-b border-gray-100">
+                <h1 class="text-xl font-bold text-gray-900 tracking-tight">ลงทะเบียนสนามกีฬาแห่งใหม่</h1>
+                <p class="text-xs text-gray-500 mt-1">กรอกข้อมูลรายละเอียดของสนามกีฬาเพื่อเปิดระบบให้สิทธิ์นักศึกษาจองเข้าใช้งาน</p>
+            </div>
+
+            <form id="add-court-form" class="p-6 sm:p-8 space-y-6 text-xs">
+                <input type="hidden" name="action" value="create_court">
+                
+                <!-- ส่วนที่ 1: ข้อมูลทั่วไปของสนาม -->
+                <div class="space-y-4">
+                    <h3 class="text-sm font-bold text-gray-900 flex items-center bg-gray-50 px-3 py-2 rounded-xl">
+                        <span class="w-1 h-4 bg-psruGreen rounded-full mr-2"></span>
+                        <span>1. ข้อมูลทั่วไปและสถานที่ตั้ง</span>
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-1.5">ชื่อสนามกีฬา *</label>
+                            <input type="text" name="court_name" required placeholder="เช่น สนามฟุตซอล อาคารเอนกประสงค์, คอร์ทแบดมินตัน 1" 
+                                class="w-full bg-gray-50/80 p-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-psruGreen focus:bg-white transition-all">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-1.5">ประเภทกีฬา/สนาม *</label>
+                            <select name="sport_type" required class="w-full bg-gray-50/80 p-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-psruGreen focus:bg-white transition-all">
+                                <option value="">-- เลือกประเภทกีฬา --</option>
+                                <option value="futsal">ฟุตซอล</option>
+                                <option value="badminton">แบดมินตัน</option>
+                                <option value="football">ฟุตบอล</option>
+                                <option value="tennis">เทนนิส</option>
+                                <option value="basketball">บาสเกตบอล</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-1.5">ศูนย์การศึกษา (พื้นที่ตั้ง) *</label>
+                            <select name="campus_id" id="campus-select" required class="w-full bg-gray-50/80 p-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-psruGreen focus:bg-white transition-all">
+                                <option value="">-- โหลดข้อมูลศูนย์... --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-1.5">ลักษณะพื้นที่สนาม *</label>
+                            <div class="flex space-x-4 mt-2">
+                                <label class="flex items-center font-medium text-gray-600"><input type="radio" name="location_type" value="indoor" checked class="text-psruGreen focus:ring-psruGreen mr-1.5"> ในร่ม (Indoor)</label>
+                                <label class="flex items-center font-medium text-gray-600"><input type="radio" name="location_type" value="outdoor" class="text-psruGreen focus:ring-psruGreen mr-1.5"> กลางแจ้ง (Outdoor)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-1.5">คำอธิบายรายละเอียดสนามเพิ่มเติม</label>
+                        <textarea name="description" rows="3" placeholder="ระบุประเภทพื้นผิวสนาม (เช่น พื้นปาร์เก้, พื้นยางพารา) ขนาดความจุ หรือคำแนะนำเบื้องต้น..." 
+                            class="w-full bg-gray-50/80 p-3 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-psruGreen focus:bg-white transition-all"></textarea>
+                    </div>
+                </div>
+
+                <!-- ส่วนที่ 2: รูปภาพสนาม -->
+                <div class="space-y-4">
+                    <h3 class="text-sm font-bold text-gray-900 flex items-center bg-gray-50 px-3 py-2 rounded-xl">
+                        <span class="w-1 h-4 bg-psruGreen rounded-full mr-2"></span>
+                        <span>2. ภาพถ่ายสถานที่จริง</span>
+                    </h3>
+                    
+                    <div class="border-2 border-dashed border-gray-200 hover:border-psruGreen rounded-2xl p-6 text-center transition-all bg-gray-50/30 cursor-pointer" onclick="document.getElementById('file-upload').click()">
+                        <input type="file" id="file-upload" name="court_image" class="hidden" accept="image/*" onchange="handleFileSelect(this)">
+                        <div class="w-10 h-10 bg-white border border-gray-200 rounded-xl flex items-center justify-center text-gray-400 mx-auto mb-2 shadow-sm">
+                            <i data-lucide="image-plus" class="w-5 h-5"></i>
+                        </div>
+                        <p class="font-bold text-gray-700">คลิกเพื่อเลือกไฟล์รูปภาพสนามจริง</p>
+                        <p class="text-[10px] text-gray-400 mt-1">รองรับไฟล์ JPG, JPEG, PNG (ขนาดไม่เกิน 5MB)</p>
+                        <div id="file-preview-list" class="mt-3 text-xs text-psruGreen font-semibold hidden"></div>
+                    </div>
+                </div>
+
+                <!-- ส่วนที่ 3: สิ่งอำนวยความสะดวก -->
+                <div class="space-y-4">
+                    <h3 class="text-sm font-bold text-gray-900 flex items-center bg-gray-50 px-3 py-2 rounded-xl">
+                        <span class="w-1 h-4 bg-psruGreen rounded-full mr-2"></span>
+                        <span>3. สิ่งอำนวยความสะดวกที่มีให้บริการประจำสนาม</span>
+                    </h3>
+                    
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 font-medium text-gray-600">
+                        <label class="flex items-center p-2.5 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 cursor-pointer">
+                            <input type="checkbox" name="facilities[]" value="ระบบไฟสปอตไลท์" class="rounded text-psruGreen focus:ring-psruGreen mr-2 w-4 h-4"> ระบบไฟสปอตไลท์
+                        </label>
+                        <label class="flex items-center p-2.5 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 cursor-pointer">
+                            <input type="checkbox" name="facilities[]" value="อัฒจันทร์เชียร์" class="rounded text-psruGreen focus:ring-psruGreen mr-2 w-4 h-4"> อัฒจันทร์เชียร์
+                        </label>
+                        <label class="flex items-center p-2.5 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 cursor-pointer">
+                            <input type="checkbox" name="facilities[]" value="ห้องน้ำใกล้เคียง" class="rounded text-psruGreen focus:ring-psruGreen mr-2 w-4 h-4"> ห้องน้ำใกล้เคียง
+                        </label>
+                        <label class="flex items-center p-2.5 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 cursor-pointer">
+                            <input type="checkbox" name="facilities[]" value="อุปกรณ์ให้ยืมหน้างาน" class="rounded text-psruGreen focus:ring-psruGreen mr-2 w-4 h-4"> อุปกรณ์ให้ยืมหน้างาน
+                        </label>
+                    </div>
+                </div>
+
+                <!-- ส่วนที่ 4: ตั้งค่าเงื่อนไขเวลา -->
+                <div class="space-y-4">
+                    <h3 class="text-sm font-bold text-gray-900 flex items-center bg-gray-50 px-3 py-2 rounded-xl">
+                        <span class="w-1 h-4 bg-psruGreen rounded-full mr-2"></span>
+                        <span>4. ตั้งค่าเงื่อนไขเวลาและข้อกำหนดสิทธิ์การจอง</span>
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-1.5">เวลาเปิดให้บริการต่อวัน</label>
+                            <input type="time" name="opening_time" required value="08:00" class="w-full bg-gray-50/80 p-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-psruGreen focus:bg-white transition-all">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-1.5">เวลาปิดให้บริการต่อวัน</label>
+                            <input type="time" name="closing_time" required value="20:00" class="w-full bg-gray-50/80 p-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-psruGreen focus:bg-white transition-all">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-1.5">จำกัดชั่วโมงการจอง/คน/วัน *</label>
+                            <select name="max_booking_hours" required class="w-full bg-gray-50/80 p-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-psruGreen focus:bg-white transition-all">
+                                <option value="1">สูงสุด 1 ชั่วโมง / วัน</option>
+                                <option value="2" selected>สูงสุด 2 ชั่วโมง / วัน</option>
+                                <option value="3">สูงสุด 3 ชั่วโมง / วัน</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ปุ่มส่งฟอร์ม -->
+                <div class="border-t border-gray-100 pt-6 flex flex-col sm:flex-row sm:justify-end gap-3 text-sm">
+                    <a href="dashboard.html" class="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 px-6 rounded-xl transition-all text-center">
+                        ยกเลิกการเพิ่มสนาม
+                    </a>
+                    <button type="submit" class="w-full sm:w-auto bg-psruGreen hover:bg-green-700 text-white font-bold py-2.5 px-8 rounded-xl transition-all shadow-md shadow-green-100 flex items-center justify-center space-x-1.5">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                        <span>บันทึกเพิ่มสนามกีฬา</span>
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </main>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        checkAuth('admin');
+
+        // Fetch Campuses list
+        async function fetchCampuses() {
+            try {
+                const response = await fetch('../api/admin/dashboard.php');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const select = document.getElementById('campus-select');
+                    select.innerHTML = '<option value="">-- เลือกพื้นที่ศูนย์การศึกษา --</option>';
+                    result.campuses.forEach(camp => {
+                        select.insertAdjacentHTML('beforeend', `<option value="${camp.id}">${camp.name}</option>`);
+                    });
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        fetchCampuses();
+
+        function handleFileSelect(input) {
+            const preview = document.getElementById('file-preview-list');
+            if (input.files.length > 0) {
+                preview.classList.remove('hidden');
+                preview.innerHTML = `✓ เลือกรูปภาพแล้ว: ${input.files[0].name}`;
+            } else {
+                preview.classList.add('hidden');
+            }
+        }
+
+        // Form Submit
+        document.getElementById('add-court-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const alertBox = document.getElementById('error-alert');
+            const alertText = document.getElementById('error-alert-text');
+            
+            alertBox.classList.add('hidden');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `⏳ กำลังบันทึกสนาม...`;
+            
+            const formData = new FormData(this);
+            // Append checked facilities
+            const checkedFacs = this.querySelectorAll('input[name="facilities[]"]:checked');
+            formData.delete('facilities[]');
+            checkedFacs.forEach(f => {
+                formData.append('facilities[]', f.value);
+            });
+            
+            try {
+                const response = await fetch('../api/admin/court-action.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alertText.textContent = result.message;
+                    alertBox.classList.remove('hidden');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> <span>บันทึกเพิ่มสนามกีฬา</span>`;
+                    lucide.createIcons();
+                }
+            } catch (err) {
+                alertText.textContent = "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์";
+                alertBox.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> <span>บันทึกเพิ่มสนามกีฬา</span>`;
+                lucide.createIcons();
+            }
+        });
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) lucide.createIcons();
+        });
+    </script>
+</body>
+</html>

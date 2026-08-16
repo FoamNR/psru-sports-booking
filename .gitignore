@@ -1,0 +1,23 @@
+# Database / environment config
+.env
+
+# User uploaded files
+uploads/*
+!uploads/.gitkeep
+uploads/courts/*
+!uploads/courts/.gitkeep
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDEs and editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

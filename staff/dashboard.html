@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบผู้ดูแลสนาม - PSRU Sports</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        psruGreen: '#01a715',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Prompt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+    </style>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Common JS Layout & Auth Controller -->
+    <script src="../js/layout.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+
+    <!-- 1. HEADER & NAVIGATION FOR STAFF -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3">
+                    <img src="../logo.png" alt="PSRU Sports Logo" class="w-10 h-10 object-contain">
+                    <div>
+                        <span class="font-bold text-lg text-gray-900 block leading-tight">PSRU Staff</span>
+                        <span class="text-xs text-amber-600 font-medium">ระบบเจ้าหน้าที่ดูแลสนาม (ศูนย์ทะเลแก้ว)</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-xl flex items-center">
+                        <span class="w-2 h-2 bg-green-500 rounded-full inline-block mr-1.5 animate-pulse"></span>
+                        กะการทำงาน: ช่วงเย็น
+                    </span>
+                    <button onclick="handleLogout()" class="text-gray-400 hover:text-red-500 transition-colors">
+                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
+        
+        <!-- HEADER TITLE & QUICK REPORT BUTTON -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-5">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 tracking-tight">แผงควบคุมผู้ดูแลสนาม</h1>
+                <p class="text-xs text-gray-500 mt-0.5">จัดการคำขอ ตรวจเช็กความพร้อมพื้นที่ และรายงานสถิติหน้างานประจำวัน</p>
+            </div>
+            <!-- รายงานปัญหาหน้างาน -->
+            <button onclick="openReportModal()" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center space-x-1.5 self-start sm:self-center">
+                <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                <span>รายงานปัญหาหน้างาน (แจ้งชำรุด/งดใช้)</span>
+            </button>
+        </div>
+
+        <!-- Success/Error Message alert -->
+        <div id="status-alert" class="hidden p-4 rounded-xl border font-medium text-xs flex items-center space-x-2 shadow-sm animate-in fade-in duration-200">
+            <i id="status-alert-icon" class="w-4 h-4"></i>
+            <span id="status-alert-text"></span>
+        </div>
+
+        <!-- รายงานสถิติการใช้สนาม (Dashboard Overview) -->
+        <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5">
+                <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0"><i data-lucide="clock" class="w-5 h-5"></i></div>
+                <div><span class="text-[10px] text-gray-400 font-bold block">รอพิจารณา</span><span id="kpi-pending" class="text-xl font-bold text-gray-900">... คำขอ</span></div>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5">
+                <div class="w-10 h-10 rounded-xl bg-green-50 text-psruGreen flex items-center justify-center flex-shrink-0"><i data-lucide="check-circle" class="w-5 h-5"></i></div>
+                <div><span class="text-[10px] text-gray-400 font-bold block">อนุมัติแล้ววันนี้</span><span id="kpi-approved-today" class="text-xl font-bold text-gray-900">... รอบ</span></div>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5">
+                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0"><i data-lucide="user-check" class="w-5 h-5"></i></div>
+                <div><span class="text-[10px] text-gray-400 font-bold block">เช็กอินเข้าใช้งาน</span><span id="kpi-checkin-rate" class="text-xl font-bold text-gray-900">...%</span></div>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5">
+                <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0"><i data-lucide="dribbble" class="w-5 h-5"></i></div>
+                <div><span class="text-[10px] text-gray-400 font-bold block">สนามยอดนิยม</span><span id="kpi-popular" class="text-[11px] font-bold text-gray-900 line-clamp-1">กำลังโหลด...</span></div>
+            </div>
+        </section>
+
+        <!-- TWO COLUMN LAYOUT -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            
+            <!-- COLUMN ซ้าย (2/3): ตรวจสอบคำขอจองและพิจารณาอนุมัติ/ไม่อนุมัติ -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                    
+                    <!-- ส่วนแท็บควบคุม -->
+                    <div class="border-b border-gray-100 flex items-center justify-between px-5 py-3.5 bg-gray-50/50">
+                        <h2 class="font-bold text-sm text-gray-900 flex items-center space-x-2">
+                            <span class="w-1.5 h-4 bg-psruGreen rounded-full inline-block"></span>
+                            <span>รายการคำขอจองระบบ</span>
+                        </h2>
+                        
+                        <div class="flex space-x-1.5 text-[10px] font-bold">
+                            <button onclick="switchStaffBookingTab('pending')" id="btn-staff-pending" class="px-2.5 py-1.5 rounded-lg bg-psruGreen text-white shadow-sm transition-all">รอพิจารณา (...)</button>
+                            <button onclick="switchStaffBookingTab('approved')" id="btn-staff-approved" class="px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white text-gray-500 hover:text-psruGreen transition-all">อนุมัติแล้ว (...)</button>
+                            <button onclick="switchStaffBookingTab('rejected')" id="btn-staff-rejected" class="px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white text-gray-500 hover:text-psruGreen transition-all">ปฏิเสธแล้ว (...)</button>
+                        </div>
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- TAB CONTENT: รอพิจารณา (Pending) -->
+                    <!-- ========================================== -->
+                    <div id="staff-tab-pending" class="staff-booking-tab-content divide-y divide-gray-100">
+                        <!-- Loaded dynamically -->
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- TAB CONTENT: อนุมัติแล้ว (Approved) -->
+                    <!-- ========================================== -->
+                    <div id="staff-tab-approved" class="staff-booking-tab-content divide-y divide-gray-100 hidden">
+                        <!-- Loaded dynamically -->
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- TAB CONTENT: ปฏิเสธแล้ว (Rejected) -->
+                    <!-- ========================================== -->
+                    <div id="staff-tab-rejected" class="staff-booking-tab-content divide-y divide-gray-100 hidden">
+                        <!-- Loaded dynamically -->
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- COLUMN ขวา (1/3): ตรวจสอบความพร้อมการใช้งานสนาม -->
+            <div class="space-y-6">
+                <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
+                    <h2 class="font-bold text-base text-gray-900 mb-4 flex items-center space-x-2">
+                        <i data-lucide="clipboard-check" class="w-5 h-5 text-psruGreen"></i>
+                        <span>ความพร้อมการใช้งานสนาม</span>
+                    </h2>
+                    
+                    <div class="space-y-3.5 text-xs" id="courts-status-list">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- 🌐 MODALS -->
+
+    <!-- MODAL 1: รายละเอียดผู้ใช้งาน -->
+    <div id="user-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-gray-100">
+            <h3 class="font-bold text-gray-900 text-base mb-3 flex items-center"><i data-lucide="user-search" class="w-4 h-4 mr-1.5 text-psruGreen"></i> รายละเอียดผู้จอง</h3>
+            <div class="space-y-2 text-xs text-gray-600 border-t border-gray-100 pt-3">
+                <p><span class="font-bold text-gray-700">ชื่อ-นามสกุล:</span> <span id="u-name" class="text-gray-900"></span></p>
+                <p><span class="font-bold text-gray-700">รหัสนักศึกษา:</span> <span id="u-id" class="text-gray-900"></span></p>
+                <p><span class="font-bold text-gray-700">คณะ/หน่วยงาน:</span> <span id="u-faculty" class="text-gray-900"></span></p>
+                <p><span class="font-bold text-gray-700">เบอร์ติดต่อ:</span> <span id="u-phone" class="text-gray-900"></span></p>
+                <p class="bg-green-50 text-green-700 p-2 rounded-xl border border-green-100 mt-2 font-medium" id="u-history"></p>
+            </div>
+            <button onclick="closeModal('user-modal')" class="w-full mt-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold py-2 rounded-xl transition-all">ปิดหน้าต่าง</button>
+        </div>
+    </div>
+
+    <!-- MODAL 2: กล่องพิจารณา อนุมัติ / ไม่อนุมัติ -->
+    <div id="action-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-gray-100 text-center">
+            <div class="w-12 h-12 rounded-full mx-auto flex items-center justify-center mb-3" id="action-icon-container"></div>
+            <h3 class="font-bold text-gray-900 text-base mb-1" id="action-title"></h3>
+            <p class="text-xs text-gray-400 mb-4">หมายเลขคำขอ: <span id="action-target-code" class="font-mono font-bold"></span></p>
+            
+            <form id="action-form" class="space-y-3 text-left">
+                <input type="hidden" id="action-booking-id">
+                <input type="hidden" id="action-type">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">ระบุเหตุผลประกอบ (ส่งแจ้งเตือนไปยังนักศึกษา)</label>
+                    <textarea id="action-reason" required rows="3" class="w-full bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-psruGreen" placeholder="ระบุเหตุผล..."></textarea>
+                </div>
+                <div class="flex space-x-2 text-xs pt-1">
+                    <button type="submit" class="flex-1 bg-gray-900 hover:bg-gray-800 text-white font-bold py-2 rounded-xl transition-all">ยืนยันทำรายการ</button>
+                    <button type="button" onclick="closeModal('action-modal')" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 rounded-xl transition-all">ยกเลิก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: รายงานปัญหาหน้างาน -->
+    <div id="report-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-gray-100">
+            <h3 class="font-bold text-gray-900 text-base mb-1 flex items-center text-red-600"><i data-lucide="alert-circle" class="w-5 h-5 mr-1.5"></i> บันทึกรายงานปัญหาหน้างาน</h3>
+            <p class="text-xs text-gray-400 mb-4">รายงานนี้จะถูกส่งไปยังระบบ Admin ส่วนกลางเพื่อรับทราบและประสานงานแก้ไข</p>
+            
+            <form id="report-form" class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-bold text-gray-700 mb-1">เลือกสนามที่พบปัญหา</label>
+                    <select id="report-court-id" required class="w-full bg-gray-50 p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500">
+                        <!-- Loaded dynamically -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-gray-700 mb-1">รายละเอียดปัญหา / อุปกรณ์ชำรุด</label>
+                    <textarea id="report-description" rows="3" required class="w-full bg-gray-50 p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="เช่น แป้นบาสชำรุด, หลอดไฟสปอตไลท์ฝั่งทิศใต้ดับ 2 ดวง, พื้นปาร์เก้บวมน้ำ..."></textarea>
+                </div>
+                <div class="flex space-x-2 pt-1 text-sm">
+                    <button type="submit" class="flex-1 bg-red-50 hover:bg-red-600 text-white font-bold py-2.5 rounded-xl transition-all shadow-sm">ส่งรายงานส่งแอดมิน</button>
+                    <button type="button" onclick="closeModal('report-modal')" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl transition-all">ปิด</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="bg-white border-t border-gray-200 py-4 w-full text-center text-xs text-gray-400 mt-12">
+        © 2026 มหาวิทยาลัยราชภัฏพิบูลสงคราม. แผงควบคุมระบบปฏิบัติการหน้างานของเจ้าหน้าที่ศูนย์กีฬา
+    </footer>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        checkAuth('staff');
+
+        let staffData = {
+            kpis: {},
+            pending_bookings: [],
+            approved_bookings: [],
+            rejected_bookings: [],
+            courts: []
+        };
+        let activeStaffTab = 'pending';
+
+        // Load staff dashboard data
+        async function fetchStaffDashboard() {
+            try {
+                const response = await fetch('../api/staff/dashboard.php');
+                const result = await response.json();
+                
+                if (result.success) {
+                    staffData = result;
+                    updateKPIs(result.kpis);
+                    renderStaffBookings();
+                    renderCourtsStatus(result.courts);
+                    populateReportCourts(result.courts);
+                }
+            } catch (e) {
+                showStaffAlert('danger', 'เกิดข้อผิดพลาดในการโหลดข้อมูลหลังบ้าน');
+            }
+        }
+
+        function updateKPIs(kpis) {
+            document.getElementById('kpi-pending').textContent = `${kpis.pending_count} คำขอ`;
+            document.getElementById('kpi-approved-today').textContent = `${kpis.approved_today_count} รอบ`;
+            document.getElementById('kpi-checkin-rate').textContent = `${kpis.checkin_rate}%`;
+            document.getElementById('kpi-popular').textContent = kpis.popular_court_name;
+            
+            // Update Tab counts
+            document.getElementById('btn-staff-pending').textContent = `รอพิจารณา (${staffData.pending_bookings.length})`;
+            document.getElementById('btn-staff-approved').textContent = `อนุมัติแล้ว (${staffData.approved_bookings.length})`;
+            document.getElementById('btn-staff-rejected').textContent = `ปฏิเสธแล้ว (${staffData.rejected_bookings.length})`;
+        }
+
+        function switchStaffBookingTab(tab) {
+            activeStaffTab = tab;
+            
+            const tabs = ['pending', 'approved', 'rejected'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`btn-staff-${t}`);
+                if (t === tab) {
+                    btn.className = "px-2.5 py-1.5 rounded-lg bg-psruGreen text-white shadow-sm font-bold transition-all";
+                } else {
+                    btn.className = "px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white text-gray-500 hover:text-psruGreen transition-all";
+                }
+            });
+            
+            renderStaffBookings();
+        }
+
+        function renderStaffBookings() {
+            const pendingContainer = document.getElementById('staff-tab-pending');
+            const approvedContainer = document.getElementById('staff-tab-approved');
+            const rejectedContainer = document.getElementById('staff-tab-rejected');
+            
+            // Hide all tab views
+            pendingContainer.classList.add('hidden');
+            approvedContainer.classList.add('hidden');
+            rejectedContainer.classList.add('hidden');
+            
+            const activeView = document.getElementById(`staff-tab-${activeStaffTab}`);
+            activeView.classList.remove('hidden');
+            activeView.innerHTML = '';
+            
+            let list = [];
+            if (activeStaffTab === 'pending') list = staffData.pending_bookings;
+            else if (activeStaffTab === 'approved') list = staffData.approved_bookings;
+            else if (activeStaffTab === 'rejected') list = staffData.rejected_bookings;
+            
+            if (list.length === 0) {
+                activeView.innerHTML = `
+                    <div class="p-8 text-center text-gray-400">
+                        <i data-lucide="check-circle-2" class="w-10 h-10 text-gray-300 mx-auto mb-2"></i>
+                        <p class="font-medium text-xs">ไม่มีรายการในหมวดหมู่นี้</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+            
+            list.forEach(booking => {
+                const optDate = new Date(booking.booking_date).toLocaleDateString('th-TH');
+                
+                if (activeStaffTab === 'pending') {
+                    activeView.insertAdjacentHTML('beforeend', `
+                        <div class="p-5 hover:bg-gray-50/50 transition-colors space-y-4">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-bold text-xs">
+                                        ${booking.first_name.charAt(0)}
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-gray-900 cursor-pointer hover:text-psruGreen" 
+                                            onclick="openUserModal('${booking.first_name} ${booking.last_name}', '${booking.username}', 'รหัสนักศึกษา: ${booking.username}', '${booking.phone}', 'ประวัติ: ปกติ (อีเมล: ${booking.email})')">
+                                            นศ. ${booking.first_name} ${booking.last_name} <i data-lucide="external-link" class="w-3.5 h-3.5 inline text-gray-400 ml-0.5"></i>
+                                        </h4>
+                                        <p class="text-[11px] text-gray-400">รหัส: ${booking.username} · โทร: ${booking.phone}</p>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-mono bg-gray-100 text-gray-600 px-2 py-0.5 rounded self-start sm:self-center">ID: ${booking.booking_code}</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 bg-gray-50 rounded-xl p-3 gap-2 text-xs text-gray-600">
+                                <div><span class="font-medium">🏟️ สนาม:</span> <span class="text-gray-900 font-semibold">${booking.court_name}</span></div>
+                                <div><span class="font-medium">⏱️ เวลา:</span> <span class="text-gray-900 font-semibold">${optDate} · ${booking.start_time.slice(0, 5)} - ${booking.end_time.slice(0, 5)} น.</span></div>
+                                <div class="sm:col-span-2 border-t border-gray-200/60 pt-2 mt-1">
+                                    <span class="font-medium text-amber-700">💡 คำขอเพิ่มเติม:</span> 
+                                    <span class="text-gray-900 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100 font-medium">"${booking.additional_request || 'ไม่มีพิเศษ'}"</span>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end space-x-2 text-xs pt-1">
+                                <button onclick="openApprovalModal(${booking.id}, '${booking.booking_code}', 'approve')" class="bg-psruGreen hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-xl shadow-sm transition-all flex items-center space-x-1">
+                                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                                    <span>อนุมัติการจอง</span>
+                                </button>
+                                <button onclick="openApprovalModal(${booking.id}, '${booking.booking_code}', 'reject')" class="border border-red-200 hover:bg-red-50 text-red-500 font-semibold py-2 px-4 rounded-xl transition-all flex items-center space-x-1">
+                                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                                    <span>ไม่อนุมัติ</span>
+                                </button>
+                            </div>
+                        </div>
+                    `);
+                } else if (activeStaffTab === 'approved') {
+                    const staffName = booking.staff_first ? `👤 ผู้พิจารณา: เจ้าหน้าที่ ${booking.staff_first} ${booking.staff_last}` : '';
+                    activeView.insertAdjacentHTML('beforeend', `
+                        <div class="p-5 hover:bg-gray-50/50 transition-colors space-y-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 rounded-full bg-green-50 text-psruGreen flex items-center justify-center font-bold text-xs">
+                                        ${booking.first_name.charAt(0)}
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-gray-900">นศ. ${booking.first_name} ${booking.last_name}</h4>
+                                        <p class="text-[11px] text-gray-400">รหัส: ${booking.username} · โทร: ${booking.phone}</p>
+                                    </div>
+                                </div>
+                                <span class="text-xs bg-green-50 text-psruGreen border border-green-100 px-2 py-0.5 rounded font-bold">🟢 อนุมัติสิทธิ์แล้ว</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 bg-gray-50 rounded-xl p-3 gap-2 text-xs text-gray-600">
+                                <div><span class="font-medium">🏟️ สนาม:</span> <span class="text-gray-900 font-semibold">${booking.court_name}</span></div>
+                                <div><span class="font-medium">⏱️ เวลา:</span> <span class="text-gray-900 font-semibold">${optDate} · ${booking.start_time.slice(0, 5)} - ${booking.end_time.slice(0, 5)} น.</span></div>
+                                ${staffName ? `<div class="sm:col-span-2 text-[10px] text-gray-400 border-t border-gray-200/50 pt-2 mt-1">${staffName}</div>` : ''}
+                            </div>
+                        </div>
+                    `);
+                } else if (activeStaffTab === 'rejected') {
+                    const staffName = booking.staff_first ? `👤 ผู้จัดการ: เจ้าหน้าที่ ${booking.staff_first} ${booking.staff_last}` : '';
+                    activeView.insertAdjacentHTML('beforeend', `
+                        <div class="p-5 hover:bg-gray-50/50 transition-colors space-y-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center font-bold text-xs">
+                                        ${booking.first_name.charAt(0)}
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-gray-900">นศ. ${booking.first_name} ${booking.last_name}</h4>
+                                        <p class="text-[11px] text-gray-400">รหัส: ${booking.username}</p>
+                                    </div>
+                                </div>
+                                <span class="text-xs bg-red-50 text-red-500 border border-red-100 px-2 py-0.5 rounded font-bold">🔴 ปฏิเสธการจอง</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 bg-gray-50 rounded-xl p-3 gap-2 text-xs text-gray-600">
+                                <div><span class="font-medium">🏟️ สนาม:</span> <span class="text-gray-900 font-semibold">${booking.court_name}</span></div>
+                                <div><span class="font-medium">⏱️ เวลา:</span> <span class="text-gray-900 font-semibold">${optDate} · ${booking.start_time.slice(0, 5)} - ${booking.end_time.slice(0, 5)} น.</span></div>
+                                <div class="sm:col-span-2 border-t border-gray-200/50 pt-2 mt-1">
+                                    <span class="font-medium text-red-700">❌ เหตุผลการปฏิเสธ:</span>
+                                    <span class="text-gray-800 font-medium">"${booking.rejection_reason}"</span>
+                                </div>
+                                ${staffName ? `<div class="sm:col-span-2 text-[10px] text-gray-400 border-t border-gray-100/50 pt-1">${staffName}</div>` : ''}
+                            </div>
+                        </div>
+                    `);
+                }
+            });
+            
+            lucide.createIcons();
+        }
+
+        // Render court readiness checkboxes
+        function renderCourtsStatus(courts) {
+            const list = document.getElementById('courts-status-list');
+            list.innerHTML = '';
+            
+            courts.forEach(court => {
+                let select_class = "bg-green-50 text-psruGreen focus:ring-psruGreen";
+                if (court.status === 'maintenance') select_class = "bg-amber-50 text-amber-600 focus:ring-amber-500";
+                else if (court.status === 'closed') select_class = "bg-red-50 text-red-500 focus:ring-red-500";
+                
+                list.insertAdjacentHTML('beforeend', `
+                    <div class="border border-gray-100 rounded-xl p-3 bg-gray-50/50 flex items-center justify-between">
+                        <div class="max-w-[60%]">
+                            <h4 class="font-bold text-gray-900 truncate">${court.name}</h4>
+                            <p class="text-[10px] text-gray-400 mt-0.5">ประเภท: ${court.sport_type}</p>
+                        </div>
+                        <select onchange="updateCourtStatus(this, ${court.id})" class="${select_class} font-semibold border-none py-1 px-2 rounded-lg text-[11px] focus:outline-none">
+                            <option value="ready" ${court.status === 'ready' ? 'selected' : ''}>🟢 พร้อมใช้งาน</option>
+                            <option value="maintenance" ${court.status === 'maintenance' ? 'selected' : ''}>🟡 ปรับปรุงชั่วคราว</option>
+                            <option value="closed" ${court.status === 'closed' ? 'selected' : ''}>🔴 ปิดให้บริการ</option>
+                        </select>
+                    </div>
+                `);
+            });
+        }
+
+        function populateReportCourts(courts) {
+            const select = document.getElementById('report-court-id');
+            select.innerHTML = '<option value="">-- กรุณาเลือกสนามกีฬา --</option>';
+            courts.forEach(court => {
+                select.insertAdjacentHTML('beforeend', `<option value="${court.id}">${court.name}</option>`);
+            });
+        }
+
+        // Action Submits
+        async function updateCourtStatus(selectElement, id) {
+            const status = selectElement.value;
+            try {
+                const response = await fetch('../api/staff/actions.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'update_court_status', court_id: id, court_status: status })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showStaffAlert('success', result.message);
+                    fetchStaffDashboard();
+                }
+            } catch(e) {
+                showStaffAlert('danger', 'เกิดข้อผิดพลาดในการเชื่อมต่อ');
+            }
+        }
+
+        document.getElementById('action-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            
+            const payload = {
+                action: 'booking_action',
+                booking_id: document.getElementById('action-booking-id').value,
+                action_type: document.getElementById('action-type').value,
+                reason: document.getElementById('action-reason').value
+            };
+            
+            try {
+                const response = await fetch('../api/staff/actions.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showStaffAlert('success', result.message);
+                    closeModal('action-modal');
+                    fetchStaffDashboard();
+                } else {
+                    alert(result.message);
+                }
+            } catch(e) {
+                alert('เกิดข้อผิดพลาด');
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+
+        document.getElementById('report-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            
+            const payload = {
+                action: 'report_issue',
+                report_court_id: document.getElementById('report-court-id').value,
+                report_description: document.getElementById('report-description').value
+            };
+            
+            try {
+                const response = await fetch('../api/staff/actions.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showStaffAlert('success', result.message);
+                    closeModal('report-modal');
+                    document.getElementById('report-form').reset();
+                } else {
+                    alert(result.message);
+                }
+            } catch (e) {
+                alert('เกิดข้อผิดพลาด');
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Modals triggers
+        function openUserModal(name, id, faculty, phone, history) {
+            document.getElementById('u-name').textContent = name;
+            document.getElementById('u-id').textContent = id;
+            document.getElementById('u-faculty').textContent = faculty;
+            document.getElementById('u-phone').textContent = phone;
+            document.getElementById('u-history').innerHTML = `<i data-lucide='shield' class='w-3.5 h-3.5 inline mr-1'></i> ${history}`;
+            document.getElementById('user-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function openApprovalModal(id, code, actionType) {
+            document.getElementById('action-booking-id').value = id;
+            document.getElementById('action-target-code').textContent = code;
+            document.getElementById('action-type').value = actionType;
+            
+            const container = document.getElementById('action-icon-container');
+            const title = document.getElementById('action-title');
+            const textarea = document.getElementById('action-reason');
+
+            if (actionType === 'approve') {
+                container.className = "w-12 h-12 rounded-full mx-auto flex items-center justify-center mb-3 bg-green-50 text-psruGreen";
+                container.innerHTML = `<i data-lucide="check" class="w-6 h-6"></i>`;
+                title.textContent = "ยืนยันการอนุมัติการจอง";
+                textarea.value = "อนุมัติคำขอจองสนามกีฬา สิทธิ์นักศึกษาเข้าใช้งานฟรีตามเวลาดังกล่าว";
+            } else {
+                container.className = "w-12 h-12 rounded-full mx-auto flex items-center justify-center mb-3 bg-red-50 text-red-500";
+                container.innerHTML = `<i data-lucide="x" class="w-6 h-6"></i>`;
+                title.textContent = "ปฏิเสธ/ไม่อนุมัติคำขอจอง";
+                textarea.value = "";
+                textarea.placeholder = "โปรดระบุเหตุผล เช่น ติดกิจกรรมด่วนของมหาวิทยาลัย หรือสนามปิดปรับปรุง...";
+            }
+
+            document.getElementById('action-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function openReportModal() {
+            document.getElementById('report-modal').classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function showStaffAlert(type, msg) {
+            const alert = document.getElementById('status-alert');
+            const alertIcon = document.getElementById('status-alert-icon');
+            const alertText = document.getElementById('status-alert-text');
+            
+            alert.className = type === 'success' 
+                ? "bg-green-50 text-green-700 p-4 rounded-xl border border-green-100 font-medium text-xs flex items-center space-x-2 shadow-sm"
+                : "bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 font-medium text-xs flex items-center space-x-2 shadow-sm";
+                
+            alertIcon.setAttribute('data-lucide', type === 'success' ? 'check-circle' : 'alert-circle');
+            alertText.textContent = msg;
+            alert.classList.remove('hidden');
+            
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                alert.classList.add('hidden');
+            }, 4000);
+        }
+
+        // Bootstrapping
+        window.addEventListener('DOMContentLoaded', async () => {
+            await fetchStaffDashboard();
+            if (window.lucide) lucide.createIcons();
+        });
+    </script>
+</body>
+</html>

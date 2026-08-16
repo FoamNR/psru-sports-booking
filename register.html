@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สมัครสมาชิก - PSRU Sports</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        psruGreen: '#01a715',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Prompt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+    </style>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Common JS Layout & Auth Controller -->
+    <script src="js/layout.js"></script>
+</head>
+<body class="bg-gray-50/50 min-h-screen flex flex-col justify-between text-gray-800">
+
+    <!-- Spacer สำหรับจัดวางตรงกลางอย่างสวยงาม -->
+    <div class="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        
+        <!-- การ์ดฟอร์มลงทะเบียน -->
+        <div class="bg-white rounded-3xl border border-gray-200 shadow-sm max-w-lg w-full p-6 sm:p-8">
+            
+            <!-- โลโก้และหัวข้อสมัครสมาชิก -->
+            <div class="text-center mb-6">
+                <img src="logo.png" alt="PSRU Sports Logo" class="w-14 h-14 object-contain mx-auto mb-3">
+                <h1 class="text-xl font-bold text-gray-900 tracking-tight">ลงทะเบียนสมาชิกใหม่</h1>
+                <p class="text-xs text-gray-500 mt-1">กรอกข้อมูลให้ครบถ้วนเพื่อเริ่มใช้งานระบบจองสนามกีฬา PSRU</p>
+            </div>
+
+            <!-- แจ้งเตือนสถานะสำเร็จ / ล้มเหลว -->
+            <div id="error-alert" class="hidden mb-4 bg-red-50 text-red-600 text-xs p-3 rounded-xl border border-red-100 font-semibold flex items-center space-x-2">
+                <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0"></i>
+                <span id="error-alert-text"></span>
+            </div>
+
+            <div id="success-alert" class="hidden mb-4 bg-green-50 text-green-700 text-xs p-3 rounded-xl border border-green-100 font-semibold flex items-center space-x-2">
+                <i data-lucide="check-circle" class="w-4 h-4 flex-shrink-0"></i>
+                <span id="success-alert-text"></span>
+            </div>
+
+            <!-- ฟอร์มลงทะเบียน -->
+            <form id="register-form" class="space-y-4 text-xs font-medium">
+                
+                <!-- เลือกระดับสิทธิ์ใช้งาน (Role Selector) -->
+                <div>
+                    <label class="block font-bold text-gray-700 mb-1.5">ประเภทการสมัครสมาชิก *</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-center justify-center p-2.5 border-2 border-psruGreen bg-green-50/50 rounded-xl cursor-pointer text-center font-bold text-psruGreen transition-all" id="label-student">
+                            <input type="radio" name="role" value="student" checked onchange="toggleRoleUI('student')" class="hidden">
+                            <span>นักศึกษาทั่วไป</span>
+                        </label>
+                        <label class="flex items-center justify-center p-2.5 border border-gray-200 rounded-xl cursor-pointer text-center font-semibold text-gray-500 hover:bg-gray-50 transition-all" id="label-staff">
+                            <input type="radio" name="role" value="staff" onchange="toggleRoleUI('staff')" class="hidden">
+                            <span>เจ้าหน้าที่ดูแลสนาม</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- ข้อมูลบัญชีผู้ใช้ -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-gray-100 pt-4">
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-1.5" id="username-label">รหัสนักศึกษา *</label>
+                        <input type="text" id="username" required placeholder="เช่น 640000002"
+                            class="w-full bg-gray-50/80 p-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-psruGreen focus:bg-white transition-all placeholder:text-gray-400">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-1.5">เบอร์โทรติดต่อ</label>
+                        <input type="text" id="phone" required placeholder="เช่น 089xxxxxxx"
+                            class="w-full bg-gray-50/80 p-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-psruGreen focus:bg-white transition-all placeholder:text-gray-400">
+                    </div>
+                </div>
+
+                <!-- ข้อมูลส่วนตัว (ชื่อจริง / นามสกุล) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-1.5">ชื่อจริง *</label>
+                        <input type="text" id="first_name" required placeholder="ชื่อภาษาไทย"
+                            class="w-full bg-gray-50/80 p-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-psruGreen focus:bg-white transition-all">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-1.5">นามสกุล *</label>
+                        <input type="text" id="last_name" required placeholder="นามสกุลภาษาไทย"
+                            class="w-full bg-gray-50/80 p-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-psruGreen focus:bg-white transition-all">
+                    </div>
+                </div>
+
+                <!-- อีเมล -->
+                <div>
+                    <label class="block font-bold text-gray-700 mb-1.5">ที่อยู่อีเมล (ถ้ามี)</label>
+                    <input type="email" id="email" required placeholder="เช่น example@psru.ac.th"
+                        class="w-full bg-gray-50/80 p-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-psruGreen focus:bg-white transition-all">
+                </div>
+
+                <!-- รหัสผ่าน -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-gray-100 pt-4">
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-1.5">รหัสผ่าน * (อย่างน้อย 6 ตัว)</label>
+                        <input type="password" id="password" required placeholder="••••••"
+                            class="w-full bg-gray-50/80 p-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-psruGreen focus:bg-white transition-all">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-1.5">ยืนยันรหัสผ่านอีกครั้ง *</label>
+                        <input type="password" id="confirm_password" required placeholder="••••••"
+                            class="w-full bg-gray-50/80 p-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-psruGreen focus:bg-white transition-all">
+                    </div>
+                </div>
+
+                <!-- บันทึกเงื่อนไขสำคัญกรณีเลือกเจ้าหน้าที่ -->
+                <div id="staff-notice" class="hidden bg-amber-50 border border-amber-100 rounded-xl p-3 text-[10px] text-amber-800 leading-relaxed">
+                    💡 **หมายเหตุสำหรับสิทธิ์เจ้าหน้าที่:** บัญชีของคุณจะยังไม่สามารถล็อกอินใช้งานได้ทันที ระบบจะกำหนดสถานะระงับชั่วคราวเพื่อส่งคำขอไปแสดงในแผงควบคุมของ แอดมินส่วนกลาง เพื่ออนุมัติสิทธิ์เปิดบัญชีให้หลังจากลงทะเบียนเรียบร้อยแล้ว
+                </div>
+
+                <!-- ปุ่มสมัครสมาชิก -->
+                <button type="submit" id="submit-btn" class="w-full bg-psruGreen hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-all shadow-md shadow-green-100 flex items-center justify-center space-x-1.5 text-sm mt-3">
+                    <i data-lucide="check" class="w-4 h-4"></i>
+                    <span>ยืนยันข้อมูลการลงทะเบียน</span>
+                </button>
+            </form>
+
+            <!-- ลิงก์กลับหน้าล็อกอิน -->
+            <div class="border-t border-gray-100 pt-4 mt-5 text-center">
+                <p class="text-gray-500">
+                    มีบัญชีอยู่แล้ว? 
+                    <a href="login.html" class="font-bold text-psruGreen hover:underline ml-1">เข้าสู่ระบบได้ที่นี่</a>
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div id="footer-container"></div>
+
+    <script>
+        checkAuth();
+        loadLayout();
+
+        function toggleRoleUI(role) {
+            const labelStudent = document.getElementById('label-student');
+            const labelStaff = document.getElementById('label-staff');
+            const usernameLabel = document.getElementById('username-label');
+            const staffNotice = document.getElementById('staff-notice');
+
+            if (role === 'student') {
+                labelStudent.className = "flex items-center justify-center p-2.5 border-2 border-psruGreen bg-green-50/50 rounded-xl cursor-pointer text-center font-bold text-psruGreen transition-all";
+                labelStaff.className = "flex items-center justify-center p-2.5 border border-gray-200 rounded-xl cursor-pointer text-center font-semibold text-gray-500 hover:bg-gray-50 transition-all";
+                usernameLabel.textContent = "รหัสนักศึกษา *";
+                staffNotice.classList.add('hidden');
+            } else {
+                labelStaff.className = "flex items-center justify-center p-2.5 border-2 border-psruGreen bg-green-50/50 rounded-xl cursor-pointer text-center font-bold text-psruGreen transition-all";
+                labelStudent.className = "flex items-center justify-center p-2.5 border border-gray-200 rounded-xl cursor-pointer text-center font-semibold text-gray-500 hover:bg-gray-50 transition-all";
+                usernameLabel.textContent = "ชื่อบัญชีผู้ใช้ (Username) *";
+                staffNotice.classList.remove('hidden');
+            }
+        }
+
+        document.getElementById('register-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submit-btn');
+            const errorAlert = document.getElementById('error-alert');
+            const successAlert = document.getElementById('success-alert');
+            
+            errorAlert.classList.add('hidden');
+            successAlert.classList.add('hidden');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `⏳ กำลังลงทะเบียน...`;
+            
+            const formData = new FormData();
+            formData.append('role', document.querySelector('input[name="role"]:checked').value);
+            formData.append('username', document.getElementById('username').value);
+            formData.append('phone', document.getElementById('phone').value);
+            formData.append('first_name', document.getElementById('first_name').value);
+            formData.append('last_name', document.getElementById('last_name').value);
+            formData.append('email', document.getElementById('email').value);
+            formData.append('password', document.getElementById('password').value);
+            formData.append('confirm_password', document.getElementById('confirm_password').value);
+            
+            try {
+                const response = await fetch('api/auth/register.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    successAlert.querySelector('#success-alert-text').textContent = result.message;
+                    successAlert.classList.remove('hidden');
+                    document.getElementById('register-form').reset();
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2500);
+                } else {
+                    errorAlert.querySelector('#error-alert-text').textContent = result.message;
+                    errorAlert.classList.remove('hidden');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> <span>ยืนยันข้อมูลการลงทะเบียน</span>`;
+                    lucide.createIcons();
+                }
+            } catch (err) {
+                errorAlert.querySelector('#error-alert-text').textContent = "เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง";
+                errorAlert.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> <span>ยืนยันข้อมูลการลงทะเบียน</span>`;
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>
