@@ -68,7 +68,7 @@ async function loadLayout() {
                     html = html.replace(/href="index.html"/g, 'href="../index.html"');
                     html = html.replace(/href="my-bookings.html"/g, 'href="../my-bookings.html"');
                     html = html.replace(/href="rules.html"/g, 'href="../rules.html"');
-                    html = html.replace(/src="logo.png"/g, 'src="../logo.png"');
+                    html = html.replace(/src="assets\/images\/logo.png"/g, 'src="../assets/images/logo.png"');
                 }
                 navbarContainer.innerHTML = html;
                 

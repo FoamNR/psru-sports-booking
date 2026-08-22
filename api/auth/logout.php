@@ -1,8 +1,8 @@
 <?php
-header('Content-Type: application/json');
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-session_unset();
-session_destroy();
-echo json_encode(['success' => true]);
+require_once '../../models/BaseModel.php';
+require_once '../../models/UserModel.php';
+require_once '../../controllers/BaseController.php';
+require_once '../../controllers/AuthController.php';
+
+$controller = new AuthController();
+$controller->logout();
