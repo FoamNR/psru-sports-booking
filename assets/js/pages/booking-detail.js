@@ -22,7 +22,10 @@ const generateBookingDates = () => {
         else if (i === 1) label = `พรุ่งนี้ (วัน${dayNames[targetDate.getDay()]})`;
         else label = `วัน${dayNames[targetDate.getDay()]}ที่ ${targetDate.getDate()} ${monthNames[targetDate.getMonth()]}`;
         
-        const value = targetDate.toISOString().split('T')[0];
+        const year = targetDate.getFullYear();
+        const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+        const day = String(targetDate.getDate()).padStart(2, '0');
+        const value = `${year}-${month}-${day}`;
         const opt = document.createElement('option');
         opt.value = value;
         opt.innerText = label;

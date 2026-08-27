@@ -1,4 +1,7 @@
 <?php
+// Set default timezone to Thailand (GMT+7)
+date_default_timezone_set('Asia/Bangkok');
+
 // Function to load .env variables
 function loadEnv($path) {
     if (!file_exists($path)) {
