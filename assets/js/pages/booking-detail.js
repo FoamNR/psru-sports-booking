@@ -6,37 +6,31 @@ const urlParams = new URLSearchParams(window.location.search);
 const courtId = parseInt(urlParams.get('court_id') || 1);
 const defaultDate = urlParams.get('date');
 
-// Dynamic Date Generation (Today + 2 Days)
+// Setup Booking Date picker limits (Today + 2 Days)
 const generateBookingDates = () => {
-    const select = document.getElementById('booking-date');
-    const dayNames = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
-    const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    const dateInput = document.getElementById('booking-date');
     
-    let defaultSelected = false;
-    for (let i = 0; i < 3; i++) {
-        const targetDate = new Date();
-        targetDate.setDate(targetDate.getDate() + i);
-        
-        let label = '';
-        if (i === 0) label = `วันนี้ (วัน${dayNames[targetDate.getDay()]})`;
-        else if (i === 1) label = `พรุ่งนี้ (วัน${dayNames[targetDate.getDay()]})`;
-        else label = `วัน${dayNames[targetDate.getDay()]}ที่ ${targetDate.getDate()} ${monthNames[targetDate.getMonth()]}`;
-        
-        const year = targetDate.getFullYear();
-        const month = String(targetDate.getMonth() + 1).padStart(2, '0');
-        const day = String(targetDate.getDate()).padStart(2, '0');
-        const value = `${year}-${month}-${day}`;
-        const opt = document.createElement('option');
-        opt.value = value;
-        opt.innerText = label;
-        
-        if (defaultDate === value) {
-            opt.selected = true;
-            defaultSelected = true;
-        }
-        
-        select.appendChild(opt);
-    }
+    // Get min date (Today)
+    const today = new Date();
+    const yearToday = today.getFullYear();
+    const monthToday = String(today.getMonth() + 1).padStart(2, '0');
+    const dayToday = String(today.getDate()).padStart(2, '0');
+    const minDateVal = `${yearToday}-${monthToday}-${dayToday}`;
+    
+    // Get max date (Today + 2 Days)
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 2);
+    const yearMax = maxDate.getFullYear();
+    const monthMax = String(maxDate.getMonth() + 1).padStart(2, '0');
+    const dayMax = String(maxDate.getDate()).padStart(2, '0');
+    const maxDateVal = `${yearMax}-${monthMax}-${dayMax}`;
+    
+    // Set attributes
+    dateInput.min = minDateVal;
+    dateInput.max = maxDateVal;
+    
+    // Default value selection
+    dateInput.value = (defaultDate && defaultDate >= minDateVal && defaultDate <= maxDateVal) ? defaultDate : minDateVal;
 };
 
 generateBookingDates();
