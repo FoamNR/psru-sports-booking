@@ -81,6 +81,10 @@ class AuthController extends BaseController {
             $this->json(['success' => false, 'message' => 'บทบาทผู้ใช้ระบบไม่ถูกต้อง']);
         }
 
+        if ($role === 'student' && strlen($username) !== 10) {
+            $this->json(['success' => false, 'message' => 'รหัสนักศึกษาต้องมีความยาว 10 หลักเท่านั้น']);
+        }
+
         try {
             if ($this->userModel->isUsernameExists($username)) {
                 $this->json(['success' => false, 'message' => 'รหัสนักศึกษา/ชื่อผู้ใช้นี้มีอยู่ในระบบแล้ว กรุณาใช้รหัสอื่นหรือติดต่อผู้ดูแล']);
