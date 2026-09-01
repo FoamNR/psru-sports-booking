@@ -59,22 +59,38 @@ class CourtController extends BaseController {
     }
 
     /**
-     * Check booked slots for a court on a date
+     * Check booked slots for a court on a single date or multiple dates
      */
     public function bookedSlots() {
         $courtId = isset($_GET['court_id']) ? intval($_GET['court_id']) : 0;
         $selectedDate = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+        $datesParam = isset($_GET['dates']) ? trim($_GET['dates']) : '';
 
         if ($courtId <= 0) {
             $this->json(['success' => false, 'message' => 'Invalid Court ID'], 400);
         }
 
         try {
-            $bookedSlots = $this->bookingModel->getBookedSlots($courtId, $selectedDate);
-            $this->json([
-                'success' => true,
-                'booked_slots' => $bookedSlots
-            ]);
+            if (!empty($datesParam)) {
+                $dateArray = explode(',', $datesParam);
+                $bookedByDate = [];
+                foreach ($dateArray as $d) {
+                    $d = trim($d);
+                    if ($d) {
+                        $bookedByDate[$d] = $this->bookingModel->getBookedSlots($courtId, $d);
+                    }
+                }
+                $this->json([
+                    'success' => true,
+                    'booked_slots_by_date' => $bookedByDate
+                ]);
+            } else {
+                $bookedSlots = $this->bookingModel->getBookedSlots($courtId, $selectedDate);
+                $this->json([
+                    'success' => true,
+                    'booked_slots' => $bookedSlots
+                ]);
+            }
         } catch (PDOException $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 500);
         }

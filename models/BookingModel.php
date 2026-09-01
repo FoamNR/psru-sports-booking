@@ -37,20 +37,29 @@ class BookingModel extends BaseModel {
     }
 
     /**
-     * Check if a court slot is already booked on a date
+     * Check if a court slot has time overlap on a specific date
      * 
      * @param int $courtId
      * @param string $date
      * @param string $startTime
+     * @param string $endTime
      * @return bool
      */
-    public function isSlotBooked($courtId, $date, $startTime) {
+    public function isSlotBooked($courtId, $date, $startTime, $endTime = null) {
+        if ($endTime === null) {
+            // Default 1 hour slot fallback
+            $endTime = date('H:i:s', strtotime($startTime) + 3600);
+        }
+        
         $stmt = $this->db->prepare("
             SELECT COUNT(*) FROM bookings 
-            WHERE court_id = ? AND booking_date = ? AND start_time = ? AND status IN ('pending', 'approved', 'completed')
+            WHERE court_id = ? 
+              AND booking_date = ? 
+              AND (start_time < ? AND end_time > ?) 
+              AND status IN ('pending', 'approved', 'completed')
         ");
-        $stmt->execute([$courtId, $date, $startTime]);
-        return $stmt->fetchColumn() > 0;
+        $stmt->execute([$courtId, $date, $endTime, $startTime]);
+        return (int)$stmt->fetchColumn() > 0;
     }
 
     /**
@@ -58,10 +67,10 @@ class BookingModel extends BaseModel {
      * 
      * @return bool
      */
-    public function create($bookingCode, $userId, $courtId, $bookingDate, $startTime, $endTime, $additionalRequest) {
+    public function create($bookingCode, $userId, $courtId, $bookingDate, $startTime, $endTime, $bookingTitle, $additionalRequest = '') {
         $stmt = $this->db->prepare("
-            INSERT INTO bookings (booking_code, user_id, court_id, booking_date, start_time, end_time, status, additional_request) 
-            VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)
+            INSERT INTO bookings (booking_code, user_id, court_id, booking_date, start_time, end_time, booking_title, status, additional_request) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)
         ");
         return $stmt->execute([
             $bookingCode,
@@ -70,8 +79,45 @@ class BookingModel extends BaseModel {
             $bookingDate,
             $startTime,
             $endTime,
+            $bookingTitle,
             $additionalRequest
         ]);
+    }
+
+    /**
+     * Create multiple bookings in a single transaction
+     * 
+     * @param array $bookings
+     * @return array Created booking codes
+     * @throws Exception
+     */
+    public function createMultiple($bookings) {
+        try {
+            $this->db->beginTransaction();
+            $stmt = $this->db->prepare("
+                INSERT INTO bookings (booking_code, user_id, court_id, booking_date, start_time, end_time, booking_title, status, additional_request) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)
+            ");
+            $createdCodes = [];
+            foreach ($bookings as $b) {
+                $stmt->execute([
+                    $b['booking_code'],
+                    $b['user_id'],
+                    $b['court_id'],
+                    $b['booking_date'],
+                    $b['start_time'],
+                    $b['end_time'],
+                    $b['booking_title'] ?? '',
+                    $b['additional_request'] ?? ''
+                ]);
+                $createdCodes[] = $b['booking_code'];
+            }
+            $this->db->commit();
+            return $createdCodes;
+        } catch (PDOException $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
     }
 
     /**

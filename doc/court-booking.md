@@ -13,16 +13,16 @@
 - **Functional Requirements:**
   1. ค้นหาและกรองสนามกีฬาตามชื่อสนาม ประเภทกีฬา วันที่เข้าใช้งาน และศูนย์การศึกษา (ศูนย์ทะเลแก้ว / ศูนย์ส่วนวังจันทน์)
   2. ดูรายละเอียดข้อมูลสนาม ภาพถ่ายสิ่งสถานที่จริง สิ่งอำนวยความสะดวก และกฎระเบียบของแต่ละสนาม
-  3. ตรวจสอบตารางรอบเวลาว่าง (Time Slots) ที่สามารถจองได้จริงแบบ Real-time ของสนามในแต่ละวัน
-  4. ทำการเลือกวันและรอบเวลา (รอบละ 1 ชั่วโมง) พร้อมกรอกคำขอเพิ่มเติมหรือยืมอุปกรณ์กีฬา
+  3. ตรวจสอบช่วงเวลาที่ถูกจองแล้ว (Occupied/Booked Slots) ของสนามในแต่ละวันแบบ Real-time
+  4. ทำการเลือกวันที่ต้องการเข้าเล่น (รองรับทั้งการจอง 1 วัน และการจองหลายวันต่อเนื่อง Date Range) พร้อมระบุเวลาเริ่มต้นและเวลาสิ้นสุดตามต้องการ (เช่น 16:30 - 19:00 น.) และกรอกคำขอเพิ่มเติมหรือยืมอุปกรณ์กีฬา
   5. ตรวจสอบประวัติการจองและสถานะของตนเอง (`pending`, `approved`, `rejected`, `completed`, `cancelled`)
   6. นักศึกษาสามารถยกเลิกใบจองของตนเองได้ เฉพาะเมื่อสถานะยังเป็น "รออนุมัติ (`pending`)" เท่านั้น
   7. เจ้าหน้าที่สามารถอนุมัติหรือปฏิเสธคำขอจองพร้อมระบุเหตุผลได้ผ่านทาง Dashboard
 
 - **Business Rules:**
-  1. **Quota Limitation:** จำกัดสิทธิ์การจองของนักศึกษา 1 คน สามารถจองสนามกีฬาได้สูงสุด **1 ครั้ง / วัน / คน** เท่านั้น (ตรวจสอบในทุกสถานะที่เป็น `pending`, `approved`, หรือ `completed` ของวันนั้น ๆ)
-  2. **Double Booking Prevention:** ในรอบเวลาเดียวกันของสนามเดียวกัน จะมีผู้จองที่ได้รับการอนุมัติหรือรออนุมัติได้เพียงแค่ **1 รายการ** เท่านั้น (ไม่อนุญาตให้จองทับซ้อนเวลา)
-  3. **Time Slot Constraints:** รอบเวลาเปิดให้จองจะมี 4 รอบในช่วงเย็นคือ `16:00-17:00`, `17:00-18:00`, `18:00-19:00`, และ `19:00-20:00` เท่านั้น
+  1. **Flexible Booking (No Quota Limit):** ยกเลิกการจำกัดโควตาการจองต่อวัน นักศึกษาสามารถจองสนามได้หลายช่วงเวลาหรือหลายวันตามความต้องการ
+  2. **Double Booking Prevention (Overlap Check):** ในช่วงเวลาเดียวกันของสนามเดียวกัน จะมีผู้จองที่ได้รับการอนุมัติหรือรออนุมัติได้เพียงแค่ **1 รายการ** เท่านั้น โดยระบบจะตรวจสอบการทับซ้อนของเวลาด้วยเงื่อนไข `(start_time < new_end AND end_time > new_start)`
+  3. **Operating Hours:** ระบุเวลาเริ่มต้นและสิ้นสุดได้ตามความต้องการ โดยต้องอยู่ภายใต้เวลาเปิดและปิดให้บริการของสนามนั้น ๆ และเวลาเริ่มต้นต้องน้อยกว่าเวลาสิ้นสุด
   4. **Status Lifecycle:** 
      - เมื่อจองเริ่มต้น: สถานะจะเป็น `pending` (รออนุมัติ)
      - เจ้าหน้าที่อนุมัติ: สถานะเปลี่ยนเป็น `approved` (อนุมัติแล้ว)
@@ -32,7 +32,7 @@
   5. **Account Status Rule:** ผู้ใช้ที่มีสถานะโดนระงับใช้งาน (`status = 'suspended'`) จะไม่สามารถเข้าสู่ระบบหรือทำรายการจองได้
 
 - **Edge Cases & Error Handling:**
-  1. **Race Condition (จองพร้อมกัน):** หากผู้ใช้สองคนทำรายการส่งฟอร์มจองรอบเวลาเดียวกันเข้ามาพร้อม ๆ กัน ระบบฝั่ง Backend จะมีขั้นตอนการตรวจสอบ Double Check ใน Database Transaction หรือ `isSlotBooked()` อีกรอบก่อนเขียนตารางลงฐานข้อมูล เพื่อป้องกันการจองทับซ้อน
+  1. **Race Condition (จองพร้อมกัน):** หากผู้ใช้สองคนทำรายการส่งฟอร์มจองรอบเวลาทับซ้อนกันเข้ามาพร้อม ๆ กัน ระบบฝั่ง Backend จะมีขั้นตอนการตรวจสอบ Double Check ใน Database Transaction หรือ `isSlotBooked()` อีกรอบก่อนเขียนตารางลงฐานข้อมูล เพื่อป้องกันการจองทับซ้อน
   2. **Invalid Session:** หาก Session หลุดระหว่างใช้งาน หรือพยายามส่ง Request โดยไม่ได้ผ่านการยืนยันตัวตน ระบบจะตอบกลับด้วยรหัสสถานะ HTTP `401 Unauthorized` และผลักดันผู้ใช้กลับไปยังหน้าล็อกอิน
   3. **Role Mismatch:** หากนักศึกษาพยายามเข้าถึงฟังก์ชันของเจ้าหน้าที่ หรือเจ้าหน้าที่พยายามจองสนามในฐานะนักศึกษา ระบบจะตอบกลับด้วยรหัส HTTP `403 Forbidden`
 
@@ -50,58 +50,52 @@ sequenceDiagram
     participant Model as BookingModel (PHP)
     participant DB as MySQL Database
 
-    Student->>API: POST /api/bookings/create.php (court_id, date, slot, request)
-    Note over Student, API: ส่ง Payload แบบ JSON ผ่าน Fetch API
+    Student->>API: POST /api/bookings/create.php (court_id, booking_dates, start_time, end_time, booking_title, additional_request)
+    Note over Student, API: ส่ง Payload แบบ JSON (ระบุหัวข้อ/วัตถุประสงค์การใช้งาน และเวลาเริ่มต้น-สิ้นสุด)
     API->>Ctrl: create()
     Ctrl->>Ctrl: checkRole('student') & get user_id จาก Session
     
     rect rgb(240, 248, 255)
-        Note over Ctrl, DB: ตรวจสอบ Business Rules
-        Ctrl->>Model: getBookingCountForDate(user_id, date)
-        Model->>DB: Query count ของ user ในวันนั้น
-        DB-->>Model: จำนวนการจอง (เช่น 0 หรือ 1)
-        Model-->>Ctrl: ผลการนับสิทธิ์
-        alt มีการจองอยู่แล้วในวันนี้
-            Ctrl-->>Student: Response (success: false, message: 'จำกัดสิทธิ์ 1 ครั้ง / วัน / คน')
-        end
-    
-        Ctrl->>Model: isSlotBooked(court_id, date, start_time)
-        Model->>DB: Query หาคิวที่จองทับซ้อน
-        DB-->>Model: ผลการตรวจสอบ
-        Model-->>Ctrl: true / false
-        alt รอบเวลาดังกล่าวถูกจองไปแล้ว
-            Ctrl-->>Student: Response (success: false, message: 'ช่วงเวลาดังกล่าวมีผู้จองแล้ว')
+        Note over Ctrl, DB: ตรวจสอบการทับซ้อนของช่วงเวลาในแต่ละวันที่เลือก
+        loop ทุกวันที่เลือก (booking_dates)
+            Ctrl->>Model: isSlotBooked(court_id, date, start_time, end_time)
+            Model->>DB: Query หาคิวที่ทับซ้อนเวลา
+            DB-->>Model: ผลการตรวจสอบ
+            Model-->>Ctrl: true / false
+            alt ช่วงเวลาดังกล่าวทับซ้อนกับคิวอื่น
+                Ctrl-->>Student: Response (success: false, message: 'ช่วงเวลาดังกล่าวในวันที่ ... มีผู้จองแล้ว')
+            end
         end
     End
 
-    Ctrl->>Ctrl: สร้าง Booking Code (BK + yymmdd + Random 4 หลัก)
-    Ctrl->>Model: create(booking_code, user_id, court_id, date, start_time, end_time, request)
-    Model->>DB: INSERT INTO bookings
+    Ctrl->>Ctrl: สร้าง Booking Code สำหรับแต่ละวัน (BK + yymmdd + Random 4 หลัก)
+    Ctrl->>Model: createMultiple(bookingsArray)
+    Model->>DB: Transaction INSERT INTO bookings
     DB-->>Model: SQL Execution Success
-    Model-->>Ctrl: true
-    Ctrl-->>Student: Response (success: true, booking_code, message: 'จองสนามสำเร็จ')
+    Model-->>Ctrl: Array of created booking codes
+    Ctrl-->>Student: Response (success: true, booking_codes, message: 'จองสนามสำเร็จ')
 ```
 
 ### Component / Module Breakdown
 ระบบใช้สถาปัตยกรรมแบบ MVC (Model-View-Controller) ย่อยที่มีการส่งข้อมูลระหว่าง Frontend (HTML/JS) และ Backend (PHP) แบบ API Decoupled Architecture:
 
 1. **Frontend / Presentation Layer:**
-   - [booking-detail.html](file:///c:/xampp/htdocs/project-pai/booking-detail.html): หน้าจอแสดงข้อมูลจำเพาะของสนาม และฟอร์มการเลือกวันที่และรอบเวลา
-   - [assets/js/pages/booking-detail.js](file:///c:/xampp/htdocs/project-pai/assets/js/pages/booking-detail.js): สคริปต์ควบคุมการโหลดรายละเอียดสนาม, ดึงรอบเวลาที่ว่างผ่าน API, จัดการ UI Slot Selection และส่งข้อมูลจอง
+   - [booking-detail.html](file:///c:/xampp/htdocs/project-pai/booking-detail.html): หน้าจอแสดงข้อมูลจำเพาะของสนาม และฟอร์มการเลือกวันที่ (วันเดียว/หลายวัน) และระบุเวลาเริ่มต้น-สิ้นสุด
+   - [assets/js/pages/booking-detail.js](file:///c:/xampp/htdocs/project-pai/assets/js/pages/booking-detail.js): สคริปต์ควบคุมการโหลดรายละเอียดสนาม, ดึงรอบเวลาที่ถูกจองแล้วผ่าน API, จัดการ UI Single/Range Date และ Time Selection และส่งข้อมูลจอง
    - [assets/js/layout.js](file:///c:/xampp/htdocs/project-pai/assets/js/layout.js): สคริปต์ส่วนกลางในการเช็กสิทธิ์ล็อกอิน (`checkAuth('student')`) และโหลดส่วนหัว/ท้ายของหน้าเว็บ
 
 2. **Backend API Entrypoints (Routing Layer):**
    - [api/bookings/create.php](file:///c:/xampp/htdocs/project-pai/api/bookings/create.php): จุดเชื่อมโยง HTTP Request สำหรับการทำรายการสร้างข้อมูลการจอง
    - [api/bookings/cancel.php](file:///c:/xampp/htdocs/project-pai/api/bookings/cancel.php): จุดเชื่อมโยงสำหรับการยกเลิกการจอง
    - [api/bookings/user.php](file:///c:/xampp/htdocs/project-pai/api/bookings/user.php): จุดเชื่อมโยงสำหรับดึงประวัติการจองของผู้ใช้ที่กำลังล็อกอินอยู่
-   - [api/courts/booked-slots.php](file:///c:/xampp/htdocs/project-pai/api/courts/booked-slots.php): ดึงรายการรอบเวลาที่ไม่ว่างของสนาม
+   - [api/courts/booked-slots.php](file:///c:/xampp/htdocs/project-pai/api/courts/booked-slots.php): ดึงรายการรอบเวลาที่ไม่ว่างของสนาม (รองรับวันที่เดียวหรือหลายวัน)
 
 3. **Controller & Business Logic Layer:**
-   - [BookingController.php](file:///c:/xampp/htdocs/project-pai/controllers/BookingController.php): คอนโทรลเลอร์ที่ประมวลผลคำขอ ทำการ Validation ตรวจสอบ Quota ป้องกัน Double Booking และสร้าง Booking Code
+   - [BookingController.php](file:///c:/xampp/htdocs/project-pai/controllers/BookingController.php): คอนโทรลเลอร์ที่ประมวลผลคำขอ ทำการ Validation ตรวจสอบ Quota ป้องกัน Double Booking (Overlap Check) และสร้าง Booking Code
    - [BaseController.php](file:///c:/xampp/htdocs/project-pai/controllers/BaseController.php): คอนโทรลเลอร์ฐานที่ช่วยเรื่องการดึงค่า Input แบบ JSON/POST, ส่งผลลัพธ์กลับแบบ JSON และตรวจสอบบทบาทผู้ใช้งาน
 
 4. **Model / Data Access Layer:**
-   - [BookingModel.php](file:///c:/xampp/htdocs/project-pai/models/BookingModel.php): คลาสที่ทำหน้าที่ Execute คำสั่ง SQL ทั้งตรวจสอบคิว, สร้างรายการจอง, ดึงประวัติการจองของนักศึกษาและฝั่งเจ้าหน้าที่
+   - [BookingModel.php](file:///c:/xampp/htdocs/project-pai/models/BookingModel.php): คลาสที่ทำหน้าที่ Execute คำสั่ง SQL ทั้งตรวจสอบคิวทับซ้อน, สร้างรายการจอง (เดี่ยว/กลุ่มผ่าน Transaction), ดึงประวัติการจองของนักศึกษาและฝั่งเจ้าหน้าที่
    - [BaseModel.php](file:///c:/xampp/htdocs/project-pai/models/BaseModel.php): คลาสฐานเก็บการเชื่อมต่อ Database ด้วย PDO (ดึง Instance จาก Config)
 
 ---
@@ -119,6 +113,7 @@ sequenceDiagram
 | **booking_date** | DATE | NOT NULL | วันที่เข้าใช้งานสนาม |
 | **start_time** | TIME | NOT NULL | เวลาเริ่มต้นของการเข้าเล่น |
 | **end_time** | TIME | NOT NULL | เวลาสิ้นสุดของการเข้าเล่น |
+| **booking_title** | VARCHAR(255) | NOT NULL | หัวข้อหรือวัตถุประสงค์การจองสนาม (จำเป็นต้องระบุ) |
 | **additional_request**| TEXT | NULL | รายละเอียดขออุปกรณ์เพิ่มเติม/คำขออื่น ๆ |
 | **status** | ENUM | NOT NULL, DEFAULT `'pending'` | สถานะการจอง: `'pending'`, `'approved'`, `'rejected'`, `'completed'`, `'cancelled'` |
 | **approved_by** (FK) | INT | NULL, REFERENCES `users(id)` | รหัสเจ้าหน้าที่ผู้ดำเนินการตรวจสอบ |
@@ -141,7 +136,8 @@ sequenceDiagram
 * **Endpoint:** `GET /api/courts/booked-slots.php`
 * **Query Parameters:**
   - `court_id`: `1` (รหัสสนามกีฬา)
-  - `date`: `2026-08-27` (วันที่ต้องการเช็ก)
+  - `date`: `2026-08-27` (วันที่ต้องการเช็ก กรณี 1 วัน)
+  - `dates`: `2026-08-27,2026-08-28` (กรณีเช็กหลายวัน)
 * **Headers / Auth:** จำเป็นต้องผ่านการล็อกอิน (Session cookie)
 * **Response:**
   * **Success (200 OK):**
@@ -151,21 +147,23 @@ sequenceDiagram
       "booked_slots": [
         {
           "start_time": "17:00:00",
-          "end_time": "18:00:00"
+          "end_time": "18:30:00"
         }
       ]
     }
     ```
 
-### 2. สร้างรายการจองสนามใหม่
+### 2. สร้างรายการจองสนามใหม่ (รองรับหลายวัน กำหนดเวลา และระบุวัตถุประสงค์)
 * **Endpoint:** `POST /api/bookings/create.php`
 * **Headers / Auth:** สิทธิ์ระดับนักศึกษา (`role = 'student'`) เท่านั้น
 * **Request Body (JSON):**
   ```json
   {
     "court_id": 1,
-    "booking_date": "2026-08-27",
-    "time_slot": "17:00-18:00",
+    "booking_dates": ["2026-08-27", "2026-08-28"],
+    "start_time": "16:30",
+    "end_time": "18:30",
+    "booking_title": "ซ้อมกีฬาฟุตซอลเพื่อสุขภาพ",
     "additional_request": "ขอยืมลูกฟุตซอลจำนวน 1 ลูกครับ"
   }
   ```
@@ -174,8 +172,10 @@ sequenceDiagram
     ```json
     {
       "success": true,
-      "message": "จองสนามสำเร็จแล้ว! รหัสคิวของคุณคือ BK2608274381 กรุณารอเจ้าหน้าที่ตรวจสอบอนุมัติ",
-      "booking_code": "BK2608274381"
+      "message": "จองสนามสำเร็จทั้งหมด 2 วัน! กรุณารอเจ้าหน้าที่ตรวจสอบอนุมัติ",
+      "booking_code": "BK2608274381",
+      "booking_codes": ["BK2608274381", "BK2608289211"],
+      "total_days": 2
     }
     ```
   * **Error - โควตาเต็มหรือห้องไม่ว่าง (200 OK หรือ 400 Bad Request):**

@@ -119,6 +119,7 @@ function renderTabContent() {
                                 <span class="text-xs text-gray-400">ID: ${booking.booking_code}</span>
                             </div>
                             <h3 class="font-bold text-lg text-gray-900">${booking.court_name}</h3>
+                            ${booking.booking_title ? `<p class="text-xs text-psruGreen font-semibold mt-0.5 flex items-center"><i data-lucide="tag" class="w-3 h-3 mr-1"></i> วัตถุประสงค์: ${booking.booking_title}</p>` : ''}
                             
                             <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-xs text-gray-600">
                                 <div class="flex items-center space-x-1.5">

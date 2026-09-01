@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     booking_date DATE NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
+    booking_title VARCHAR(255) NOT NULL,
     additional_request TEXT NULL,
     status ENUM('pending', 'approved', 'rejected', 'completed', 'cancelled') DEFAULT 'pending' NOT NULL,
     approved_by INT NULL,

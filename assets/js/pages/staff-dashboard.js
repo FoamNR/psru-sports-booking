@@ -111,9 +111,14 @@ function renderStaffBookings() {
                         <div><span class="font-medium">🏟️ สนาม:</span> <span class="text-gray-900 font-semibold">${booking.court_name}</span></div>
                         <div><span class="font-medium">⏱️ เวลา:</span> <span class="text-gray-900 font-semibold">${optDate} · ${booking.start_time.slice(0, 5)} - ${booking.end_time.slice(0, 5)} น.</span></div>
                         <div class="sm:col-span-2 border-t border-gray-200/60 pt-2 mt-1">
-                            <span class="font-medium text-amber-700">💡 คำขอเพิ่มเติม:</span> 
-                            <span class="text-gray-900 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100 font-medium">"${booking.additional_request || 'ไม่มีพิเศษ'}"</span>
+                            <span class="font-medium text-psruGreen">🎯 หัวข้อ/วัตถุประสงค์:</span> 
+                            <span class="text-gray-900 bg-green-50/70 px-2 py-0.5 rounded border border-green-100 font-semibold">${booking.booking_title || 'ไม่ได้ระบุ'}</span>
                         </div>
+                        ${booking.additional_request ? `
+                        <div class="sm:col-span-2">
+                            <span class="font-medium text-amber-700">💡 รายละเอียดเพิ่มเติม:</span> 
+                            <span class="text-gray-900 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100 font-medium">"${booking.additional_request}"</span>
+                        </div>` : ''}
                     </div>
 
                     <div class="flex justify-end space-x-2 text-xs pt-1">
@@ -148,6 +153,11 @@ function renderStaffBookings() {
                     <div class="grid grid-cols-1 sm:grid-cols-2 bg-gray-50 rounded-xl p-3 gap-2 text-xs text-gray-600">
                         <div><span class="font-medium">🏟️ สนาม:</span> <span class="text-gray-900 font-semibold">${booking.court_name}</span></div>
                         <div><span class="font-medium">⏱️ เวลา:</span> <span class="text-gray-900 font-semibold">${optDate} · ${booking.start_time.slice(0, 5)} - ${booking.end_time.slice(0, 5)} น.</span></div>
+                        ${booking.booking_title ? `
+                        <div class="sm:col-span-2 border-t border-gray-200/50 pt-2 mt-1">
+                            <span class="font-medium text-psruGreen">🎯 วัตถุประสงค์:</span> 
+                            <span class="text-gray-900 font-semibold">${booking.booking_title}</span>
+                        </div>` : ''}
                         ${staffName ? `<div class="sm:col-span-2 text-[10px] text-gray-400 border-t border-gray-200/50 pt-2 mt-1">${staffName}</div>` : ''}
                     </div>
                 </div>
@@ -172,6 +182,11 @@ function renderStaffBookings() {
                     <div class="grid grid-cols-1 sm:grid-cols-2 bg-gray-50 rounded-xl p-3 gap-2 text-xs text-gray-600">
                         <div><span class="font-medium">🏟️ สนาม:</span> <span class="text-gray-900 font-semibold">${booking.court_name}</span></div>
                         <div><span class="font-medium">⏱️ เวลา:</span> <span class="text-gray-900 font-semibold">${optDate} · ${booking.start_time.slice(0, 5)} - ${booking.end_time.slice(0, 5)} น.</span></div>
+                        ${booking.booking_title ? `
+                        <div class="sm:col-span-2 border-t border-gray-200/50 pt-2 mt-1">
+                            <span class="font-medium text-psruGreen">🎯 วัตถุประสงค์:</span> 
+                            <span class="text-gray-900 font-semibold">${booking.booking_title}</span>
+                        </div>` : ''}
                         <div class="sm:col-span-2 border-t border-gray-200/50 pt-2 mt-1">
                             <span class="font-medium text-red-700">❌ เหตุผลการปฏิเสธ:</span>
                             <span class="text-gray-800 font-medium">"${booking.rejection_reason}"</span>

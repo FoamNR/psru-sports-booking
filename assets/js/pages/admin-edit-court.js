@@ -44,7 +44,6 @@ async function fetchCourtAndCampuses() {
             document.getElementById('court-description').value = court.description;
             document.getElementById('opening-time').value = court.opening_time.slice(0, 5);
             document.getElementById('closing-time').value = court.closing_time.slice(0, 5);
-            document.getElementById('max-booking-hours').value = court.max_booking_hours_per_day;
             
             // Render image
             const imageBox = document.getElementById('current-image-box');
