@@ -85,6 +85,18 @@ class AuthController extends BaseController {
             $this->json(['success' => false, 'message' => 'รหัสนักศึกษาต้องมีความยาว 10 หลักเท่านั้น']);
         }
 
+        // Validate student email domain (@psru.ac.th or @live.psru.ac.th)
+        if ($role === 'student') {
+            $emailLower = strtolower($email);
+            $emailDomain = substr(strrchr($emailLower, "@"), 1);
+            if ($emailDomain !== 'psru.ac.th' && $emailDomain !== 'live.psru.ac.th') {
+                $this->json([
+                    'success' => false, 
+                    'message' => 'สำหรับการสมัครสมาชิกนักศึกษา กรุณาใช้อีเมลมหาวิทยาลัย (@psru.ac.th หรือ @live.psru.ac.th) เท่านั้น'
+                ]);
+            }
+        }
+
         try {
             if ($this->userModel->isUsernameExists($username)) {
                 $this->json(['success' => false, 'message' => 'รหัสนักศึกษา/ชื่อผู้ใช้นี้มีอยู่ในระบบแล้ว กรุณาใช้รหัสอื่นหรือติดต่อผู้ดูแล']);
