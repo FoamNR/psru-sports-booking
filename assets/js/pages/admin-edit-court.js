@@ -4,8 +4,15 @@ const urlParams = new URLSearchParams(window.location.search);
 const courtId = parseInt(urlParams.get('court_id') || 0);
 
 if (courtId <= 0) {
-    alert('ไม่พบรหัสอ้างอิงสนามกีฬา!');
-    window.location.href = 'dashboard.html';
+    Swal.fire({
+        title: 'ข้อผิดพลาด',
+        text: 'ไม่พบรหัสอ้างอิงสนามกีฬา!',
+        icon: 'error',
+        confirmButtonColor: '#ef4444',
+        customClass: { popup: 'rounded-3xl' }
+    }).then(() => {
+        window.location.href = 'dashboard.html';
+    });
 }
 
 document.getElementById('edit-court-id').value = courtId;
@@ -107,10 +114,24 @@ document.getElementById('edit-court-form').addEventListener('submit', async func
         
         const result = await response.json();
         if (result.success) {
+            await Swal.fire({
+                title: 'บันทึกสำเร็จ!',
+                text: result.message || 'บันทึกความเปลี่ยนแปลงของสนามกีฬาเรียบร้อยแล้ว',
+                icon: 'success',
+                confirmButtonColor: '#01a715',
+                customClass: { popup: 'rounded-3xl' }
+            });
             window.location.href = 'dashboard.html';
         } else {
             alertText.textContent = result.message;
             alertBox.classList.remove('hidden');
+            Swal.fire({
+                title: 'ไม่สามารถบันทึกได้',
+                text: result.message,
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+                customClass: { popup: 'rounded-3xl' }
+            });
             submitBtn.disabled = false;
             submitBtn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> <span>บันทึกความเปลี่ยนแปลง</span>`;
             lucide.createIcons();
@@ -118,6 +139,13 @@ document.getElementById('edit-court-form').addEventListener('submit', async func
     } catch (err) {
         alertText.textContent = "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์";
         alertBox.classList.remove('hidden');
+        Swal.fire({
+            title: 'เกิดข้อผิดพลาด',
+            text: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์',
+            icon: 'error',
+            confirmButtonColor: '#ef4444',
+            customClass: { popup: 'rounded-3xl' }
+        });
         submitBtn.disabled = false;
         submitBtn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> <span>บันทึกความเปลี่ยนแปลง</span>`;
         lucide.createIcons();

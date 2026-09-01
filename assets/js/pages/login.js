@@ -52,6 +52,13 @@ document.getElementById('login-form').addEventListener('submit', async function(
         } else {
             errorAlert.textContent = result.message;
             errorAlert.classList.remove('hidden');
+            Swal.fire({
+                title: 'เข้าสู่ระบบไม่สำเร็จ',
+                text: result.message,
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+                customClass: { popup: 'rounded-3xl' }
+            });
             submitBtn.disabled = false;
             submitBtn.innerHTML = `<i data-lucide="log-in" class="w-4 h-4"></i> <span>เข้าสู่ระบบด้วย PSRU Account</span>`;
             lucide.createIcons();
@@ -59,6 +66,13 @@ document.getElementById('login-form').addEventListener('submit', async function(
     } catch (err) {
         errorAlert.textContent = "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง";
         errorAlert.classList.remove('hidden');
+        Swal.fire({
+            title: 'เกิดข้อผิดพลาด',
+            text: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง',
+            icon: 'error',
+            confirmButtonColor: '#ef4444',
+            customClass: { popup: 'rounded-3xl' }
+        });
         submitBtn.disabled = false;
         submitBtn.innerHTML = `<i data-lucide="log-in" class="w-4 h-4"></i> <span>เข้าสู่ระบบด้วย PSRU Account</span>`;
         lucide.createIcons();

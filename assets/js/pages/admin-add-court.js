@@ -58,10 +58,24 @@ document.getElementById('add-court-form').addEventListener('submit', async funct
         
         const result = await response.json();
         if (result.success) {
+            await Swal.fire({
+                title: 'บันทึกสำเร็จ!',
+                text: result.message || 'เพิ่มข้อมูลสนามกีฬาใหม่เรียบร้อยแล้ว',
+                icon: 'success',
+                confirmButtonColor: '#01a715',
+                customClass: { popup: 'rounded-3xl' }
+            });
             window.location.href = 'dashboard.html';
         } else {
             alertText.textContent = result.message;
             alertBox.classList.remove('hidden');
+            Swal.fire({
+                title: 'ไม่สามารถบันทึกได้',
+                text: result.message,
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+                customClass: { popup: 'rounded-3xl' }
+            });
             submitBtn.disabled = false;
             submitBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> <span>บันทึกเพิ่มสนามกีฬา</span>`;
             lucide.createIcons();
@@ -69,6 +83,13 @@ document.getElementById('add-court-form').addEventListener('submit', async funct
     } catch (err) {
         alertText.textContent = "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์";
         alertBox.classList.remove('hidden');
+        Swal.fire({
+            title: 'เกิดข้อผิดพลาด',
+            text: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์',
+            icon: 'error',
+            confirmButtonColor: '#ef4444',
+            customClass: { popup: 'rounded-3xl' }
+        });
         submitBtn.disabled = false;
         submitBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> <span>บันทึกเพิ่มสนามกีฬา</span>`;
         lucide.createIcons();

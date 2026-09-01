@@ -491,13 +491,28 @@ function bindEvents() {
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert(result.message);
+                    await Swal.fire({
+                        title: 'จองสนามสำเร็จ!',
+                        text: result.message,
+                        icon: 'success',
+                        confirmButtonColor: '#01a715',
+                        confirmButtonText: 'ดูประวัติการจองของฉัน',
+                        customClass: { popup: 'rounded-3xl' }
+                    });
                     window.location.href = 'my-bookings.html';
                 } else {
                     if (alertBox) {
                         alertBox.querySelector('#error-alert-text').textContent = result.message;
                         alertBox.classList.remove('hidden');
                     }
+                    Swal.fire({
+                        title: 'ไม่สามารถจองได้',
+                        text: result.message,
+                        icon: 'error',
+                        confirmButtonColor: '#ef4444',
+                        confirmButtonText: 'ตกลง',
+                        customClass: { popup: 'rounded-3xl' }
+                    });
                     if (submitBtn) {
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> <span>ยืนยันข้อตกลงและส่งใบจอง</span>`;

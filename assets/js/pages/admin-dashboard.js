@@ -193,7 +193,19 @@ async function toggleUserStatus(id) {
 }
 
 async function deleteUser(id, name) {
-    if (confirm(`คุณต้องการลบข้อมูลบัญชีของ "${name}" ออกจากระบบใช่หรือไม่?`)) {
+    const swalRes = await Swal.fire({
+        title: 'ยืนยันการลบผู้ใช้?',
+        html: `คุณต้องการลบข้อมูลบัญชีของ <strong>"${name}"</strong> ออกจากระบบใช่หรือไม่?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'ยืนยันลบข้อมูล',
+        cancelButtonText: 'ยกเลิก',
+        customClass: { popup: 'rounded-3xl' }
+    });
+
+    if (swalRes.isConfirmed) {
         try {
             const response = await fetch('../api/admin/dashboard.php', {
                 method: 'POST',
@@ -204,26 +216,78 @@ async function deleteUser(id, name) {
             if (result.success) {
                 showAlert('success', result.message);
                 fetchAdminData();
+                Swal.fire({
+                    title: 'ลบสำเร็จ!',
+                    text: result.message,
+                    icon: 'success',
+                    confirmButtonColor: '#01a715',
+                    customClass: { popup: 'rounded-3xl' }
+                });
+            } else {
+                Swal.fire({
+                    title: 'ไม่สำเร็จ',
+                    text: result.message,
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444',
+                    customClass: { popup: 'rounded-3xl' }
+                });
             }
         } catch (e) {
-            showAlert('danger', 'เกิดข้อผิดพลาดในการลบผู้ใช้งาน');
+            Swal.fire({
+                title: 'เกิดข้อผิดพลาด',
+                text: 'เกิดข้อผิดพลาดในการลบผู้ใช้งาน',
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+                customClass: { popup: 'rounded-3xl' }
+            });
         }
     }
 }
 
 async function deleteCourt(id, name) {
-    if (confirm(`คุณต้องการลบข้อมูลสนามกีฬา "${name}" ออกจากระบบใช่หรือไม่?`)) {
+    const swalRes = await Swal.fire({
+        title: 'ยืนยันการลบสนามกีฬา?',
+        html: `คุณต้องการลบข้อมูลสนามกีฬา <strong>"${name}"</strong> ออกจากระบบใช่หรือไม่?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'ยืนยันลบสนาม',
+        cancelButtonText: 'ยกเลิก',
+        customClass: { popup: 'rounded-3xl' }
+    });
+
+    if (swalRes.isConfirmed) {
         try {
             const response = await fetch(`../api/admin/court-action.php?action=delete_court&court_id=${id}`);
             const result = await response.json();
             if (result.success) {
                 showAlert('success', result.message);
                 fetchAdminData();
+                Swal.fire({
+                    title: 'ลบสำเร็จ!',
+                    text: result.message,
+                    icon: 'success',
+                    confirmButtonColor: '#01a715',
+                    customClass: { popup: 'rounded-3xl' }
+                });
             } else {
-                showAlert('danger', result.message);
+                Swal.fire({
+                    title: 'ไม่สำเร็จ',
+                    text: result.message,
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444',
+                    customClass: { popup: 'rounded-3xl' }
+                });
             }
         } catch (e) {
-            showAlert('danger', 'เกิดข้อผิดพลาดในการลบสนาม');
+            Swal.fire({
+                title: 'เกิดข้อผิดพลาด',
+                text: 'เกิดข้อผิดพลาดในการลบสนาม',
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+                customClass: { popup: 'rounded-3xl' }
+            });
         }
     }
 }
@@ -257,11 +321,30 @@ document.getElementById('add-user-form').addEventListener('submit', async functi
             closeModal('add-user-modal');
             document.getElementById('add-user-form').reset();
             fetchAdminData();
+            Swal.fire({
+                title: 'สำเร็จ!',
+                text: result.message,
+                icon: 'success',
+                confirmButtonColor: '#01a715',
+                customClass: { popup: 'rounded-3xl' }
+            });
         } else {
-            alert(result.message);
+            Swal.fire({
+                title: 'ไม่สำเร็จ',
+                text: result.message,
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+                customClass: { popup: 'rounded-3xl' }
+            });
         }
     } catch (e) {
-        alert('เกิดข้อผิดพลาดในการลงทะเบียนผู้ใช้');
+        Swal.fire({
+            title: 'เกิดข้อผิดพลาด',
+            text: 'เกิดข้อผิดพลาดในการลงทะเบียนผู้ใช้',
+            icon: 'error',
+            confirmButtonColor: '#ef4444',
+            customClass: { popup: 'rounded-3xl' }
+        });
     }
 });
 
@@ -293,11 +376,30 @@ document.getElementById('edit-user-form').addEventListener('submit', async funct
             closeModal('edit-user-modal');
             document.getElementById('edit-user-form').reset();
             fetchAdminData();
+            Swal.fire({
+                title: 'บันทึกสำเร็จ!',
+                text: result.message,
+                icon: 'success',
+                confirmButtonColor: '#01a715',
+                customClass: { popup: 'rounded-3xl' }
+            });
         } else {
-            alert(result.message);
+            Swal.fire({
+                title: 'ไม่สำเร็จ',
+                text: result.message,
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+                customClass: { popup: 'rounded-3xl' }
+            });
         }
     } catch (e) {
-        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+        Swal.fire({
+            title: 'เกิดข้อผิดพลาด',
+            text: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
+            icon: 'error',
+            confirmButtonColor: '#ef4444',
+            customClass: { popup: 'rounded-3xl' }
+        });
     }
 });
 
@@ -321,11 +423,30 @@ document.getElementById('news-form').addEventListener('submit', async function(e
         if (result.success) {
             showAlert('success', result.message);
             document.getElementById('news-form').reset();
+            Swal.fire({
+                title: 'ประกาศสำเร็จ!',
+                text: result.message,
+                icon: 'success',
+                confirmButtonColor: '#01a715',
+                customClass: { popup: 'rounded-3xl' }
+            });
         } else {
-            alert(result.message);
+            Swal.fire({
+                title: 'ไม่สำเร็จ',
+                text: result.message,
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+                customClass: { popup: 'rounded-3xl' }
+            });
         }
     } catch (e) {
-        alert('เกิดข้อผิดพลาดในการประกาศ');
+        Swal.fire({
+            title: 'เกิดข้อผิดพลาด',
+            text: 'เกิดข้อผิดพลาดในการประกาศข่าวสาร',
+            icon: 'error',
+            confirmButtonColor: '#ef4444',
+            customClass: { popup: 'rounded-3xl' }
+        });
     }
 });
 
@@ -468,7 +589,13 @@ if (adminClosureForm) {
         const reason = document.getElementById('admin-closure-reason').value.trim();
 
         if (!courtId || !startDate || !endDate || !reason) {
-            alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+            Swal.fire({
+                title: 'ข้อมูลไม่ครบถ้วน',
+                text: 'กรุณากรอกข้อมูลสนาม วันที่ และเหตุผลการปิดใช้งานให้ครบถ้วน',
+                icon: 'warning',
+                confirmButtonColor: '#f59e0b',
+                customClass: { popup: 'rounded-3xl' }
+            });
             return;
         }
 
@@ -492,11 +619,30 @@ if (adminClosureForm) {
                 closeModal('admin-closure-modal');
                 adminClosureForm.reset();
                 await fetchAdminClosures();
+                Swal.fire({
+                    title: 'บันทึกสำเร็จ!',
+                    text: result.message,
+                    icon: 'success',
+                    confirmButtonColor: '#01a715',
+                    customClass: { popup: 'rounded-3xl' }
+                });
             } else {
-                alert(result.message);
+                Swal.fire({
+                    title: 'ไม่สำเร็จ',
+                    text: result.message,
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444',
+                    customClass: { popup: 'rounded-3xl' }
+                });
             }
         } catch (e) {
-            alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+            Swal.fire({
+                title: 'เกิดข้อผิดพลาด',
+                text: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์',
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+                customClass: { popup: 'rounded-3xl' }
+            });
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = 'บันทึกการปิดสนาม';
@@ -506,7 +652,19 @@ if (adminClosureForm) {
 
 // Delete Closure by Admin
 async function deleteAdminClosure(id) {
-    if (!confirm('ต้องการยกเลิกการปิดให้บริการสนามนี้ใช่หรือไม่?')) return;
+    const swalRes = await Swal.fire({
+        title: 'ยืนยันการยกเลิก?',
+        text: 'ต้องการยกเลิกการปิดให้บริการสนามนี้ใช่หรือไม่?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'ยืนยันยกเลิกการปิดสนาม',
+        cancelButtonText: 'ปิด',
+        customClass: { popup: 'rounded-3xl' }
+    });
+
+    if (!swalRes.isConfirmed) return;
 
     try {
         const res = await fetch('../api/closures/delete.php', {
@@ -518,11 +676,30 @@ async function deleteAdminClosure(id) {
         if (result.success) {
             showAlert('success', result.message);
             await fetchAdminClosures();
+            Swal.fire({
+                title: 'สำเร็จ!',
+                text: result.message,
+                icon: 'success',
+                confirmButtonColor: '#01a715',
+                customClass: { popup: 'rounded-3xl' }
+            });
         } else {
-            alert(result.message);
+            Swal.fire({
+                title: 'ไม่สำเร็จ',
+                text: result.message,
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+                customClass: { popup: 'rounded-3xl' }
+            });
         }
     } catch (e) {
-        alert('เกิดข้อผิดพลาด');
+        Swal.fire({
+            title: 'เกิดข้อผิดพลาด',
+            text: 'เกิดข้อผิดพลาดในการดำเนินการ',
+            icon: 'error',
+            confirmButtonColor: '#ef4444',
+            customClass: { popup: 'rounded-3xl' }
+        });
     }
 }
 

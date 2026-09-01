@@ -118,12 +118,25 @@ document.getElementById('register-form').addEventListener('submit', async functi
             successAlert.querySelector('#success-alert-text').textContent = result.message;
             successAlert.classList.remove('hidden');
             document.getElementById('register-form').reset();
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 2500);
+            await Swal.fire({
+                title: 'ลงทะเบียนสำเร็จ!',
+                text: result.message,
+                icon: 'success',
+                confirmButtonColor: '#01a715',
+                confirmButtonText: 'ไปหน้าเข้าสู่ระบบ',
+                customClass: { popup: 'rounded-3xl' }
+            });
+            window.location.href = 'login.html';
         } else {
             errorAlert.querySelector('#error-alert-text').textContent = result.message;
             errorAlert.classList.remove('hidden');
+            Swal.fire({
+                title: 'ไม่สามารถลงทะเบียนได้',
+                text: result.message,
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+                customClass: { popup: 'rounded-3xl' }
+            });
             submitBtn.disabled = false;
             submitBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> <span>ยืนยันข้อมูลการลงทะเบียน</span>`;
             lucide.createIcons();
@@ -131,6 +144,13 @@ document.getElementById('register-form').addEventListener('submit', async functi
     } catch (err) {
         errorAlert.querySelector('#error-alert-text').textContent = "เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง";
         errorAlert.classList.remove('hidden');
+        Swal.fire({
+            title: 'เกิดข้อผิดพลาด',
+            text: 'เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง',
+            icon: 'error',
+            confirmButtonColor: '#ef4444',
+            customClass: { popup: 'rounded-3xl' }
+        });
         submitBtn.disabled = false;
         submitBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> <span>ยืนยันข้อมูลการลงทะเบียน</span>`;
         lucide.createIcons();

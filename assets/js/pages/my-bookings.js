@@ -165,7 +165,21 @@ function renderTabContent() {
 
 // Cancel booking
 async function cancelBooking(id, code) {
-    if (confirm(`คุณต้องการยกเลิกคำขอจองสนามกีฬาหมายเลข ${code} ใช่หรือไม่?`)) {
+    const swalRes = await Swal.fire({
+        title: 'ยืนยันการยกเลิกคำขอจอง?',
+        html: `คุณต้องการยกเลิกคำขอจองสนามกีฬาหมายเลข <strong class="text-gray-900 font-mono">${code}</strong> ใช่หรือไม่?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'ยืนยันยกเลิกการจอง',
+        cancelButtonText: 'ปิดหน้าต่าง',
+        customClass: {
+            popup: 'rounded-3xl shadow-xl'
+        }
+    });
+
+    if (swalRes.isConfirmed) {
         try {
             const response = await fetch('api/bookings/cancel.php', {
                 method: 'POST',
@@ -175,13 +189,34 @@ async function cancelBooking(id, code) {
             
             const result = await response.json();
             if (result.success) {
-                alert(result.message);
+                Swal.fire({
+                    title: 'สำเร็จ!',
+                    text: result.message,
+                    icon: 'success',
+                    confirmButtonColor: '#01a715',
+                    confirmButtonText: 'ตกลง',
+                    customClass: { popup: 'rounded-3xl' }
+                });
                 fetchBookings();
             } else {
-                alert(result.message);
+                Swal.fire({
+                    title: 'ไม่สามารถยกเลิกได้',
+                    text: result.message,
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444',
+                    confirmButtonText: 'ตกลง',
+                    customClass: { popup: 'rounded-3xl' }
+                });
             }
         } catch (e) {
-            alert('เกิดข้อผิดพลาดในการติดต่อเซิร์ฟเวอร์');
+            Swal.fire({
+                title: 'เกิดข้อผิดพลาด',
+                text: 'เกิดข้อผิดพลาดในการติดต่อเซิร์ฟเวอร์',
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'ตกลง',
+                customClass: { popup: 'rounded-3xl' }
+            });
         }
     }
 }
