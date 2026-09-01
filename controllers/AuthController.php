@@ -73,8 +73,12 @@ class AuthController extends BaseController {
             $this->json(['success' => false, 'message' => 'รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง']);
         }
 
-        if (strlen($password) < 6) {
-            $this->json(['success' => false, 'message' => 'รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษรขึ้นไปเพื่อความปลอดภัย']);
+        if (strlen($password) < 8) {
+            $this->json(['success' => false, 'message' => 'รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษรขึ้นไป']);
+        }
+
+        if (!preg_match('/[a-zA-Z]/', $password)) {
+            $this->json(['success' => false, 'message' => 'รหัสผ่านต้องประกอบด้วยตัวอักษรภาษาอังกฤษ (A-Z หรือ a-z) อย่างน้อย 1 ตัว']);
         }
 
         if (!in_array($role, ['student', 'staff'])) {

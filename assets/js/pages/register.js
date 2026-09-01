@@ -62,6 +62,36 @@ document.getElementById('register-form').addEventListener('submit', async functi
         }
     }
 
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+
+    if (password.length < 8) {
+        errorAlert.querySelector('#error-alert-text').textContent = "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษรขึ้นไป";
+        errorAlert.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> <span>ยืนยันข้อมูลการลงทะเบียน</span>`;
+        if (window.lucide) lucide.createIcons();
+        return;
+    }
+
+    if (!/[a-zA-Z]/.test(password)) {
+        errorAlert.querySelector('#error-alert-text').textContent = "รหัสผ่านต้องประกอบด้วยตัวอักษรภาษาอังกฤษ (A-Z หรือ a-z) อย่างน้อย 1 ตัว";
+        errorAlert.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> <span>ยืนยันข้อมูลการลงทะเบียน</span>`;
+        if (window.lucide) lucide.createIcons();
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        errorAlert.querySelector('#error-alert-text').textContent = "รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง";
+        errorAlert.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> <span>ยืนยันข้อมูลการลงทะเบียน</span>`;
+        if (window.lucide) lucide.createIcons();
+        return;
+    }
+
     errorAlert.classList.add('hidden');
     successAlert.classList.add('hidden');
     submitBtn.disabled = true;
