@@ -60,6 +60,11 @@
                 <i data-lucide="megaphone" class="w-4 h-4"></i>
                 <span>อัพเดตข้อมูลข่าวสาร</span>
             </button>
+
+            <button onclick="switchTab('closures-section')" id="menu-closures" class="tab-menu-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-medium text-gray-500 hover:bg-gray-50 hover:text-psruGreen transition-all text-left">
+                <i data-lucide="calendar-x" class="w-4 h-4"></i>
+                <span>วันปิดให้บริการสนาม</span>
+            </button>
         </div>
 
         <!-- Admin Profile footer -->
@@ -196,6 +201,42 @@
                         <span>แชร์ข้อมูลข่าวสาร / ส่งแจ้งเตือนด่วน</span>
                     </button>
                 </form>
+        <!-- ========================================== -->
+        <!-- TAB 4: จัดการวันปิดให้บริการสนาม -->
+        <!-- ========================================== -->
+        <section id="closures-section" class="admin-panel space-y-6 hidden">
+            <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                    <div>
+                        <h2 class="font-bold text-base text-gray-950 flex items-center">
+                            <i data-lucide="calendar-x" class="w-5 h-5 mr-2 text-amber-600"></i>
+                            <span>จัดการวันปิดให้บริการสนาม (ปิดปรับปรุง / กิจกรรมพิเศษ)</span>
+                        </h2>
+                        <p class="text-xs text-gray-500 mt-0.5">กำหนดช่วงเวลาที่งดให้บริการของสนามกีฬา เพื่อป้องกันไม่ให้นักศึกษาจองรอบเวลาดังกล่าว</p>
+                    </div>
+                    <button onclick="openAdminClosureModal()" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center space-x-1.5 self-start sm:self-center">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>+ กำหนดวันปิดสนาม</span>
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-400 font-bold uppercase border-b border-gray-100">
+                                <th class="p-3">สนามกีฬา</th>
+                                <th class="p-3">ช่วงวันที่ปิดบริการ</th>
+                                <th class="p-3">ช่วงเวลา</th>
+                                <th class="p-3">เหตุผลการปิด</th>
+                                <th class="p-3">ผู้บันทึก</th>
+                                <th class="p-3 text-right">การจัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 font-medium" id="admin-closures-table-body">
+                            <!-- Loaded dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
@@ -347,10 +388,56 @@
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl shadow-sm transition-all text-center">
                     บันทึกการแก้ไขข้อมูล
                 </button>
+    <!-- MODAL 4: กำหนดวันปิดใช้งานสนาม (Admin Closure Modal) -->
+    <div id="admin-closure-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+                <h3 class="font-bold text-gray-900 text-base flex items-center text-amber-600">
+                    <i data-lucide="calendar-x" class="w-5 h-5 mr-1.5"></i> กำหนดวันปิดให้บริการสนาม
+                </h3>
+                <button onclick="closeModal('admin-closure-modal')" class="text-gray-400 hover:bg-gray-100 p-1 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <form id="admin-closure-form" class="space-y-4 text-xs font-semibold">
+                <div>
+                    <label class="block text-gray-700 mb-1">เลือกสนามกีฬา *</label>
+                    <select id="admin-closure-court-id" required class="w-full bg-gray-50 p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                        <!-- Loaded dynamically -->
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-gray-700 mb-1">ตั้งแต่วันที่ *</label>
+                        <input type="date" id="admin-closure-start-date" required class="w-full bg-gray-50 p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-1">ถึงวันที่ *</label>
+                        <input type="date" id="admin-closure-end-date" required class="w-full bg-gray-50 p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 mb-1">เหตุผลการปิดให้บริการ (เนื่องจาก...) *</label>
+                    <input type="text" id="admin-closure-reason" required placeholder="เช่น ปรับปรุงพื้นสนาม, จัดงานแข่งขันกีฬามหาวิทยาลัย..."
+                        class="w-full bg-gray-50 p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                    
+                    <div class="flex flex-wrap gap-1.5 mt-2">
+                        <button type="button" onclick="setAdminClosurePreset('ปรับปรุงพื้นสนาม')" class="px-2 py-0.5 rounded-lg bg-gray-100 hover:bg-amber-50 hover:text-amber-800 text-[10px] text-gray-600 transition-all font-normal">ปรับปรุงพื้นสนาม</button>
+                        <button type="button" onclick="setAdminClosurePreset('จัดงานแข่งขันกีฬามหาวิทยาลัย')" class="px-2 py-0.5 rounded-lg bg-gray-100 hover:bg-amber-50 hover:text-amber-800 text-[10px] text-gray-600 transition-all font-normal">จัดงานแข่งขันกีฬา</button>
+                        <button type="button" onclick="setAdminClosurePreset('ซ่อมบำรุงระบบไฟและอุปกรณ์')" class="px-2 py-0.5 rounded-lg bg-gray-100 hover:bg-amber-50 hover:text-amber-800 text-[10px] text-gray-600 transition-all font-normal">ซ่อมบำรุงระบบไฟ</button>
+                        <button type="button" onclick="setAdminClosurePreset('ทำความสะอาดประจำสัปดาห์')" class="px-2 py-0.5 rounded-lg bg-gray-100 hover:bg-amber-50 hover:text-amber-800 text-[10px] text-gray-600 transition-all font-normal">ทำความสะอาด</button>
+                    </div>
+                </div>
+
+                <div class="flex space-x-2 pt-2">
+                    <button type="submit" id="admin-closure-submit-btn" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-xl transition-all shadow-sm">บันทึกการปิดสนาม</button>
+                    <button type="button" onclick="closeModal('admin-closure-modal')" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl transition-all">ยกเลิก</button>
+                </div>
             </form>
         </div>
     </div>
 
-    <script src="../assets/js/pages/admin-dashboard.js"></script>
+    <script src="../assets/js/pages/admin-dashboard.js?v=20260901_01"></script>
 </body>
 </html>

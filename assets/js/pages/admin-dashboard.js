@@ -19,8 +19,15 @@ function switchTab(sectionId) {
     if (sectionId === 'users-section') btnId = 'menu-users';
     else if (sectionId === 'courts-section') btnId = 'menu-courts';
     else if (sectionId === 'news-section') btnId = 'menu-news';
+    else if (sectionId === 'closures-section') {
+        btnId = 'menu-closures';
+        fetchAdminClosures();
+    }
     
-    document.getElementById(btnId).className = "tab-menu-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold bg-green-50 text-psruGreen transition-all text-left";
+    const activeBtn = document.getElementById(btnId);
+    if (activeBtn) {
+        activeBtn.className = "tab-menu-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold bg-green-50 text-psruGreen transition-all text-left";
+    }
 }
 
 // Fetch dashboard data
@@ -35,6 +42,8 @@ async function fetchAdminData() {
             
             renderUsers(usersList);
             renderCourts(courtsList);
+            renderAdminClosureCourts(courtsList);
+            await fetchAdminClosures();
         }
     } catch (e) {
         showAlert('danger', 'เกิดข้อผิดพลาดในการโหลดข้อมูลหลังบ้าน');
@@ -370,6 +379,151 @@ function showAlert(type, msg) {
     setTimeout(() => {
         alert.classList.add('hidden');
     }, 4000);
+}
+
+// Populate Court Options for Admin Closure Modal
+function renderAdminClosureCourts(courts) {
+    const select = document.getElementById('admin-closure-court-id');
+    if (!select) return;
+    select.innerHTML = '<option value="" disabled selected>-- เลือกสนามกีฬา --</option>';
+    courts.forEach(court => {
+        select.insertAdjacentHTML('beforeend', `<option value="${court.id}">${court.name} (${court.campus_name})</option>`);
+    });
+}
+
+// Fetch and render all closures for Admin
+async function fetchAdminClosures() {
+    const tbody = document.getElementById('admin-closures-table-body');
+    if (!tbody) return;
+
+    try {
+        const res = await fetch('../api/closures/list.php');
+        const data = await res.json();
+
+        if (data.success) {
+            tbody.innerHTML = '';
+            if (data.closures.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">ยังไม่มีรายการกำหนดวันปิดให้บริการสนามกีฬา</td></tr>`;
+                return;
+            }
+
+            data.closures.forEach(cl => {
+                const sDate = new Date(cl.start_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+                const eDate = new Date(cl.end_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+                const dateText = cl.start_date === cl.end_date ? sDate : `${sDate} - ${eDate}`;
+                const timeText = (cl.start_time && cl.end_time) ? `${cl.start_time.slice(0,5)} - ${cl.end_time.slice(0,5)} น.` : 'ตลอดวัน';
+                const creatorText = `${cl.creator_first} ${cl.creator_last} (${cl.creator_role === 'admin' ? 'แอดมิน' : 'เจ้าหน้าที่'})`;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50/80 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <span class="font-bold text-gray-900 block">${cl.court_name}</span>
+                        <span class="text-[10px] text-gray-400 font-medium">${cl.campus_name}</span>
+                    </td>
+                    <td class="p-3 font-medium text-gray-800">📅 ${dateText}</td>
+                    <td class="p-3 font-medium text-gray-600">${timeText}</td>
+                    <td class="p-3 font-semibold text-amber-700">${cl.reason}</td>
+                    <td class="p-3 text-gray-500">${creatorText}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="deleteAdminClosure(${cl.id})" class="px-2.5 py-1 text-[11px] font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg border border-red-100 transition-all flex items-center space-x-1 ml-auto">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            <span>ยกเลิก</span>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            if (window.lucide) lucide.createIcons();
+        }
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-red-500">เกิดข้อผิดพลาดในการโหลดรายการ</td></tr>`;
+    }
+}
+
+function openAdminClosureModal() {
+    const today = new Date().toISOString().split('T')[0];
+    const sInput = document.getElementById('admin-closure-start-date');
+    const eInput = document.getElementById('admin-closure-end-date');
+    if (sInput) sInput.value = today;
+    if (eInput) eInput.value = today;
+    document.getElementById('admin-closure-modal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+}
+
+function setAdminClosurePreset(reason) {
+    const reasonInput = document.getElementById('admin-closure-reason');
+    if (reasonInput) reasonInput.value = reason;
+}
+
+// Handle Admin Closure Form Submit
+const adminClosureForm = document.getElementById('admin-closure-form');
+if (adminClosureForm) {
+    adminClosureForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const submitBtn = document.getElementById('admin-closure-submit-btn');
+        const courtId = document.getElementById('admin-closure-court-id').value;
+        const startDate = document.getElementById('admin-closure-start-date').value;
+        const endDate = document.getElementById('admin-closure-end-date').value;
+        const reason = document.getElementById('admin-closure-reason').value.trim();
+
+        if (!courtId || !startDate || !endDate || !reason) {
+            alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'กำลังบันทึก...';
+
+        try {
+            const res = await fetch('../api/closures/create.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    court_id: courtId,
+                    start_date: startDate,
+                    end_date: endDate,
+                    reason: reason
+                })
+            });
+            const result = await res.json();
+            if (result.success) {
+                showAlert('success', result.message);
+                closeModal('admin-closure-modal');
+                adminClosureForm.reset();
+                await fetchAdminClosures();
+            } else {
+                alert(result.message);
+            }
+        } catch (e) {
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'บันทึกการปิดสนาม';
+        }
+    });
+}
+
+// Delete Closure by Admin
+async function deleteAdminClosure(id) {
+    if (!confirm('ต้องการยกเลิกการปิดให้บริการสนามนี้ใช่หรือไม่?')) return;
+
+    try {
+        const res = await fetch('../api/closures/delete.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id })
+        });
+        const result = await res.json();
+        if (result.success) {
+            showAlert('success', result.message);
+            await fetchAdminClosures();
+        } else {
+            alert(result.message);
+        }
+    } catch (e) {
+        alert('เกิดข้อผิดพลาด');
+    }
 }
 
 // Bind search input to filter users

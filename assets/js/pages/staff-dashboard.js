@@ -21,6 +21,8 @@ async function fetchStaffDashboard() {
             renderStaffBookings();
             renderCourtsStatus(result.courts);
             populateReportCourts(result.courts);
+            populateClosureCourts(result.courts);
+            await fetchClosuresList();
         }
     } catch (e) {
         showStaffAlert('danger', 'เกิดข้อผิดพลาดในการโหลดข้อมูลหลังบ้าน');
@@ -356,6 +358,140 @@ function openApprovalModal(id, code, actionType) {
 
     document.getElementById('action-modal').classList.remove('hidden');
     lucide.createIcons();
+}
+
+function populateClosureCourts(courts) {
+    const select = document.getElementById('closure-court-id');
+    if (!select) return;
+    select.innerHTML = '<option value="" disabled selected>-- เลือกสนามกีฬา --</option>';
+    courts.forEach(court => {
+        select.insertAdjacentHTML('beforeend', `<option value="${court.id}">${court.name} (${court.campus_name})</option>`);
+    });
+}
+
+// Fetch and render list of active/upcoming closures
+async function fetchClosuresList() {
+    const container = document.getElementById('closures-list');
+    if (!container) return;
+
+    try {
+        const res = await fetch('../api/closures/list.php?upcoming=1');
+        const data = await res.json();
+
+        if (data.success) {
+            if (data.closures.length === 0) {
+                container.innerHTML = `<p class="text-gray-400 text-center py-2 text-[11px]">ไม่มีรายการปิดให้บริการสนาม</p>`;
+            } else {
+                container.innerHTML = '';
+                data.closures.forEach(cl => {
+                    const sDate = new Date(cl.start_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+                    const eDate = new Date(cl.end_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+                    const dateText = cl.start_date === cl.end_date ? sDate : `${sDate} - ${eDate}`;
+                    
+                    container.insertAdjacentHTML('beforeend', `
+                        <div class="bg-amber-50/70 border border-amber-200/80 rounded-xl p-2.5 flex items-start justify-between gap-2">
+                            <div>
+                                <span class="font-bold text-gray-900 block leading-tight">${cl.court_name}</span>
+                                <span class="text-[10px] text-amber-700 font-semibold block mt-0.5">📅 ${dateText}</span>
+                                <span class="text-[10px] text-gray-500 block mt-0.5">เหตุผล: ${cl.reason}</span>
+                            </div>
+                            <button onclick="deleteClosure(${cl.id})" class="text-gray-400 hover:text-red-500 p-1 transition-colors" title="ยกเลิกการปิดสนาม">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    `);
+                });
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+    } catch (e) {
+        container.innerHTML = `<p class="text-red-500 text-center py-1 text-[11px]">โหลดรายการไม่สำเร็จ</p>`;
+    }
+}
+
+function openClosureModal() {
+    const today = new Date().toISOString().split('T')[0];
+    const sInput = document.getElementById('closure-start-date');
+    const eInput = document.getElementById('closure-end-date');
+    if (sInput) sInput.value = today;
+    if (eInput) eInput.value = today;
+    document.getElementById('closure-modal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+}
+
+function setClosurePreset(reason) {
+    const reasonInput = document.getElementById('closure-reason');
+    if (reasonInput) reasonInput.value = reason;
+}
+
+// Handle Closure form submit
+const closureForm = document.getElementById('closure-form');
+if (closureForm) {
+    closureForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const submitBtn = document.getElementById('closure-submit-btn');
+        const courtId = document.getElementById('closure-court-id').value;
+        const startDate = document.getElementById('closure-start-date').value;
+        const endDate = document.getElementById('closure-end-date').value;
+        const reason = document.getElementById('closure-reason').value.trim();
+
+        if (!courtId || !startDate || !endDate || !reason) {
+            alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'กำลังบันทึก...';
+
+        try {
+            const res = await fetch('../api/closures/create.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    court_id: courtId,
+                    start_date: startDate,
+                    end_date: endDate,
+                    reason: reason
+                })
+            });
+            const result = await res.json();
+            if (result.success) {
+                showStaffAlert('success', result.message);
+                closeModal('closure-modal');
+                closureForm.reset();
+                await fetchClosuresList();
+            } else {
+                alert(result.message);
+            }
+        } catch (e) {
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'บันทึกการปิดสนาม';
+        }
+    });
+}
+
+// Delete closure
+async function deleteClosure(id) {
+    if (!confirm('ต้องการยกเลิกการปิดให้บริการสนามนี้ใช่หรือไม่?')) return;
+
+    try {
+        const res = await fetch('../api/closures/delete.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id })
+        });
+        const result = await res.json();
+        if (result.success) {
+            showStaffAlert('success', result.message);
+            await fetchClosuresList();
+        } else {
+            alert(result.message);
+        }
+    } catch (e) {
+        alert('เกิดข้อผิดพลาด');
+    }
 }
 
 function openReportModal() {

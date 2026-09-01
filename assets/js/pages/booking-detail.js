@@ -353,6 +353,28 @@ async function fetchBookedSlots() {
         
         container.innerHTML = '';
         
+        // 1. Render Closures if any
+        let closuresList = result.closures || [];
+        if (closuresList.length > 0) {
+            closuresList.forEach(cl => {
+                const dateLabel = cl.start_date === cl.end_date 
+                    ? formatThaiDate(cl.start_date) 
+                    : `${formatThaiDate(cl.start_date)} - ${formatThaiDate(cl.end_date)}`;
+                const timeLabel = (cl.start_time && cl.end_time) 
+                    ? ` (${cl.start_time.slice(0,5)} - ${cl.end_time.slice(0,5)} น.)` 
+                    : ' (ตลอดวัน)';
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="w-full bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-2.5 text-[11px] font-medium flex items-start space-x-2 mb-1">
+                        <i data-lucide="lock" class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <span class="font-bold text-amber-800">ปิดให้บริการ ${dateLabel}${timeLabel}:</span>
+                            <span class="block text-[10px] text-amber-700">เนื่องจาก: ${cl.reason}</span>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+
         let allBooked = [];
         if (result.booked_slots_by_date) {
             for (const [d, slots] of Object.entries(result.booked_slots_by_date)) {
@@ -374,14 +396,14 @@ async function fetchBookedSlots() {
             });
         }
         
-        if (allBooked.length === 0) {
+        if (allBooked.length === 0 && closuresList.length === 0) {
             container.innerHTML = `
                 <span class="inline-flex items-center text-[11px] text-green-700 bg-green-50 px-2.5 py-1 rounded-lg font-medium border border-green-100">
                     <i data-lucide="check-circle" class="w-3.5 h-3.5 mr-1 text-psruGreen"></i>
                     สนามว่างตลอดวัน (ยังไม่มีการจอง)
                 </span>
             `;
-        } else {
+        } else if (allBooked.length > 0) {
             allBooked.forEach(slot => {
                 const dateLabel = dates.length > 1 ? `(${formatThaiDate(slot.date)}) ` : '';
                 container.insertAdjacentHTML('beforeend', `

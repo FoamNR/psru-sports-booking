@@ -32,6 +32,7 @@
   5. **Account Status Rule:** ผู้ใช้ที่มีสถานะโดนระงับใช้งาน (`status = 'suspended'`) จะไม่สามารถเข้าสู่ระบบหรือทำรายการจองได้
   6. **Student Email Domain Rule:** การสมัครสมาชิกของนักศึกษา จะต้องใช้อีเมลภายใต้โดเมนของมหาวิทยาลัยเท่านั้น (`@psru.ac.th` หรือ `@live.psru.ac.th`)
   7. **Password Security Rule:** รหัสผ่านสำหรับลงทะเบียน ต้องมีความยาวอย่างน้อย 8 ตัวอักษรขึ้นไป และต้องประกอบด้วยตัวอักษรภาษาอังกฤษ (A-Z หรือ a-z) อย่างน้อย 1 ตัว
+  8. **Court Closure & Maintenance Rule:** เจ้าหน้าที่ (Staff) และผู้ดูแลระบบ (Admin) สามารถกำหนด "วันปิดให้บริการสนาม" (เช่น ปรับปรุงพื้นสนาม, จัดงานแข่งขันกีฬามหาวิทยาลัย, ทำความสะอาด) โดยระบบจะล็อกช่วงเวลาดังกล่าว ไม่ให้นักศึกษาทำการจองได้ และแจ้งเตือนเหตุผลบนหน้าจองอย่างชัดเจน
 
 - **Edge Cases & Error Handling:**
   1. **Race Condition (จองพร้อมกัน):** หากผู้ใช้สองคนทำรายการส่งฟอร์มจองรอบเวลาทับซ้อนกันเข้ามาพร้อม ๆ กัน ระบบฝั่ง Backend จะมีขั้นตอนการตรวจสอบ Double Check ใน Database Transaction หรือ `isSlotBooked()` อีกรอบก่อนเขียนตารางลงฐานข้อมูล เพื่อป้องกันการจองทับซ้อน
@@ -122,13 +123,29 @@ sequenceDiagram
 | **rejection_reason** | TEXT | NULL | เหตุผลในกรณีที่ปฏิเสธการจอง |
 | **created_at** | TIMESTAMP | DEFAULT `CURRENT_TIMESTAMP` | วันเวลาที่ทำรายการส่งข้อมูลเข้าระบบ |
 
-### 2. Indexes & Constraints
+### 2. ตาราง `court_closures` (เก็บรายการวันปิดให้บริการสนาม / ปิดปรับปรุง)
+| Field | Data Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| **id** (PK) | INT | AUTO_INCREMENT, PRIMARY KEY | รหัสหลักรายการปิดสนาม |
+| **court_id** (FK) | INT | NOT NULL, REFERENCES `courts(id)` | รหัสสนามกีฬาที่ปิดให้บริการ |
+| **start_date** | DATE | NOT NULL | วันที่เริ่มต้นปิดให้บริการ |
+| **end_date** | DATE | NOT NULL | วันที่สิ้นสุดปิดให้บริการ |
+| **start_time** | TIME | NULL | เวลาเริ่มต้นปิดบริการ (NULL = ปิดทั้งวัน) |
+| **end_time** | TIME | NULL | เวลาสิ้นสุดปิดบริการ (NULL = ปิดทั้งวัน) |
+| **reason** | VARCHAR(255) | NOT NULL | เหตุผลการปิดใช้งาน (เช่น ปรับปรุงพื้นสนาม) |
+| **created_by** (FK) | INT | NOT NULL, REFERENCES `users(id)` | รหัสผู้บันทึก (Admin หรือ Staff) |
+| **created_at** | TIMESTAMP | DEFAULT `CURRENT_TIMESTAMP` | วันเวลาที่บันทึก |
+
+### 3. Indexes & Constraints
 - **Foreign Keys:**
   - `fk_bookings_users`: เชื่อม `user_id` กับตาราง `users(id)` โดยทำ `ON DELETE CASCADE`
   - `fk_bookings_courts`: เชื่อม `court_id` กับตาราง `courts(id)` โดยทำ `ON DELETE CASCADE`
   - `fk_bookings_staff`: เชื่อม `approved_by` กับตาราง `users(id)` โดยทำ `ON DELETE SET NULL`
+  - `fk_closures_court`: เชื่อม `court_id` กับตาราง `courts(id)` โดยทำ `ON DELETE CASCADE`
+  - `fk_closures_user`: เชื่อม `created_by` กับตาราง `users(id)` โดยทำ `ON DELETE CASCADE`
 - **Database Indexes:**
-  - `idx_bookings_date_time`: ดัชนีแบบผสม `(court_id, booking_date, start_time)` บนตาราง `bookings` เพื่อเพิ่มประสิทธิภาพในการ Query ตรวจสอบหาช่วงเวลาว่างและป้องกันการจองซ้ำซ้อนได้อย่างรวดเร็ว
+  - `idx_bookings_date_time`: ดัชนีแบบผสม `(court_id, booking_date, start_time)` บนตาราง `bookings`
+  - `idx_closures_court_date`: ดัชนีแบบผสม `(court_id, start_date, end_date)` บนตาราง `court_closures`
 
 ---
 
@@ -220,6 +237,44 @@ sequenceDiagram
           "court_name": "สนามฟุตซอล อาคารเอนกประสงค์",
           "sport_type": "futsal",
           "campus_name": "ศูนย์ทะเลแก้ว"
+        }
+      ]
+### 4. กำหนดวันปิดให้บริการสนาม (Staff & Admin)
+* **Endpoint:** `POST /api/closures/create.php`
+* **Headers / Auth:** สิทธิ์ระดับเจ้าหน้าที่หรือผู้ดูแลระบบ (`role in ['admin', 'staff']`)
+* **Request Body (JSON):**
+  ```json
+  {
+    "court_id": 1,
+    "start_date": "2026-09-05",
+    "end_date": "2026-09-07",
+    "reason": "ปรับปรุงพื้นยางพาราและเปลี่ยนหลอดไฟส่องสว่าง"
+  }
+  ```
+* **Response:**
+  * **Success (200 OK):**
+    ```json
+    {
+      "success": true,
+      "message": "บันทึกการปิดใช้งาน สนามฟุตซอล อาคารเอนกประสงค์ สำเร็จเนื่องจาก: ปรับปรุงพื้นยางพาราและเปลี่ยนหลอดไฟส่องสว่าง"
+    }
+    ```
+
+### 5. ดึงรายการวันปิดให้บริการสนาม
+* **Endpoint:** `GET /api/closures/list.php?upcoming=1`
+* **Response:**
+  * **Success (200 OK):**
+    ```json
+    {
+      "success": true,
+      "closures": [
+        {
+          "id": 1,
+          "court_id": 1,
+          "court_name": "สนามฟุตซอล อาคารเอนกประสงค์",
+          "start_date": "2026-09-05",
+          "end_date": "2026-09-07",
+          "reason": "ปรับปรุงพื้นยางพาราและเปลี่ยนหลอดไฟส่องสว่าง"
         }
       ]
     }

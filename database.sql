@@ -103,8 +103,23 @@ CREATE TABLE IF NOT EXISTS news (
     CONSTRAINT fk_news_admin FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS court_closures (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    court_id INT NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    start_time TIME NULL,
+    end_time TIME NULL,
+    reason VARCHAR(255) NOT NULL,
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_closures_court FOREIGN KEY (court_id) REFERENCES courts(id) ON DELETE CASCADE,
+    CONSTRAINT fk_closures_user FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- 3. Indexes
 CREATE INDEX idx_bookings_date_time ON bookings(court_id, booking_date, start_time);
+CREATE INDEX idx_closures_court_date ON court_closures(court_id, start_date, end_date);
 CREATE INDEX idx_courts_campus_sport ON courts(campus_id, sport_type);
 CREATE INDEX idx_users_username ON users(username);
 

@@ -1,10 +1,13 @@
 <?php
+require_once __DIR__ . '/../models/CourtClosureModel.php';
 
 class BookingController extends BaseController {
     private $bookingModel;
+    private $closureModel;
 
     public function __construct() {
         $this->bookingModel = new BookingModel();
+        $this->closureModel = new CourtClosureModel();
     }
 
     /**
@@ -136,9 +139,19 @@ class BookingController extends BaseController {
         }
 
         try {
-            // 4. Validate slot conflicts (overlap check) for each date
+            // 4. Validate slot conflicts (overlap check) and court closures for each date
             $displayTimeRange = substr($startTime, 0, 5) . ' - ' . substr($endTime, 0, 5);
             foreach ($validDates as $date) {
+                // Check if court is closed due to maintenance/event
+                $closure = $this->closureModel->isCourtClosed($courtId, $date, $startTime, $endTime);
+                if ($closure) {
+                    $reason = $closure['reason'];
+                    $this->json([
+                        'success' => false,
+                        'message' => "ขออภัย สนามปิดให้บริการในวันที่ $date เนื่องจาก: $reason"
+                    ]);
+                }
+
                 // Check conflict/overlap
                 if ($this->bookingModel->isSlotBooked($courtId, $date, $startTime, $endTime)) {
                     $this->json([
