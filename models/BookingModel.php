@@ -9,10 +9,12 @@ class BookingModel extends BaseModel {
      */
     public function getUserBookings($userId) {
         $stmt = $this->db->prepare("
-            SELECT b.*, c.name AS court_name, c.sport_type, cam.name AS campus_name 
+            SELECT b.*, c.name AS court_name, c.sport_type, cam.name AS campus_name,
+                   staff.first_name AS staff_first, staff.last_name AS staff_last
             FROM bookings b
             JOIN courts c ON b.court_id = c.id
             JOIN campuses cam ON c.campus_id = cam.id
+            LEFT JOIN users staff ON b.approved_by = staff.id
             WHERE b.user_id = ?
             ORDER BY b.booking_date DESC, b.start_time DESC
         ");
