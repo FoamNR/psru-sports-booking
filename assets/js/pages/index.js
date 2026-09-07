@@ -70,7 +70,7 @@ function renderCourts(courts) {
     courts.forEach(court => {
         let status_text = 'ว่างวันนี้';
         let badge_class = 'bg-green-50 text-psruGreen border-green-100';
-        let btn_text = 'จองสิทธิ์ฟรี';
+        let btn_text = 'จองสนาม';
         let btn_class = 'bg-psruGreen hover:bg-green-700 text-white';
         let btn_disabled = '';
         
@@ -100,6 +100,9 @@ function renderCourts(courts) {
                    <i data-lucide="${icon}" class="w-14 h-14 opacity-30"></i>
                </div>`;
 
+        const openTime = court.open_time ? court.open_time.substring(0, 5) : '08:00';
+        const closeTime = court.close_time ? court.close_time.substring(0, 5) : '21:00';
+
         const cardHtml = `
             <div class="court-card bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 flex flex-col">
                 <div class="h-44 bg-gray-100 relative overflow-hidden">
@@ -120,8 +123,8 @@ function renderCourts(courts) {
                     </div>
                     
                     <div class="pt-4 border-t border-gray-100 flex items-center justify-between">
-                        <span class="inline-flex items-center text-xs text-green-700 font-semibold bg-green-50 px-2 py-1 rounded-md">
-                            <i data-lucide="sparkles" class="w-3 h-3 mr-1"></i> สิทธิ์นักศึกษา ฟรี
+                        <span class="inline-flex items-center text-xs text-gray-500 font-medium">
+                            <i data-lucide="clock" class="w-3.5 h-3.5 mr-1 text-gray-400"></i> ${openTime} - ${closeTime} น.
                         </span>
                         <button onclick="window.location.href='booking-detail.html?court_id=${court.id}&date=${document.getElementById('filter-date').value}'" ${btn_disabled} 
                             class="action-btn ${btn_class} text-xs font-medium py-2 px-4 rounded-xl transition-all shadow-sm">

@@ -385,7 +385,7 @@ function openApprovalModal(id, code, actionType) {
         container.className = "w-12 h-12 rounded-full mx-auto flex items-center justify-center mb-3 bg-green-50 text-psruGreen";
         container.innerHTML = `<i data-lucide="check" class="w-6 h-6"></i>`;
         title.textContent = "ยืนยันการอนุมัติการจอง";
-        textarea.value = "อนุมัติคำขอจองสนามกีฬา สิทธิ์นักศึกษาเข้าใช้งานฟรีตามเวลาดังกล่าว";
+        textarea.value = "อนุมัติคำขอจองสนามกีฬา สามารถเข้าใช้งานตามวันและเวลาดังกล่าว";
     } else {
         container.className = "w-12 h-12 rounded-full mx-auto flex items-center justify-center mb-3 bg-red-50 text-red-500";
         container.innerHTML = `<i data-lucide="x" class="w-6 h-6"></i>`;

@@ -144,10 +144,8 @@ function renderTabContent() {
                     
                     <div class="flex items-center justify-between md:flex-col md:items-end border-t md:border-t-0 pt-4 md:pt-0 border-gray-100">
                         <div class="text-left md:text-right mb-0 md:mb-3">
-                            <span class="text-[10px] text-gray-400 block font-semibold uppercase">สิทธิ์นักศึกษา</span>
-                            <span class="text-sm font-bold text-psruGreen flex items-center">
-                                <i data-lucide="sparkles" class="w-3.5 h-3.5 mr-1"></i> ฟรีไม่มีค่าใช้จ่าย
-                            </span>
+                            <span class="text-[10px] text-gray-400 block font-semibold uppercase">หมายเลขการจอง</span>
+                            <span class="text-sm font-bold text-gray-700">#${String(booking.id).padStart(5, '0')}</span>
                         </div>
                         <div class="flex space-x-2">
                             ${showCodeBtn}
