@@ -38,11 +38,16 @@ function loadEnv($path) {
 // Load .env from root directory
 loadEnv(__DIR__ . '/../.env');
 
-// Configuration for Database connection
-define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-define('DB_USER', getenv('DB_USER') ?: 'root');
-define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
-define('DB_NAME', getenv('DB_NAME') ?: 'psru_sports');
+// Configuration for Database connection (Robust fallback across $_ENV, $_SERVER, getenv)
+$envHost = $_ENV['DB_HOST'] ?? $_SERVER['DB_HOST'] ?? (getenv('DB_HOST') ?: 'localhost');
+$envUser = $_ENV['DB_USER'] ?? $_SERVER['DB_USER'] ?? (getenv('DB_USER') ?: 'root');
+$envPass = $_ENV['DB_PASS'] ?? $_SERVER['DB_PASS'] ?? (getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
+$envName = $_ENV['DB_NAME'] ?? $_SERVER['DB_NAME'] ?? (getenv('DB_NAME') ?: 'psru_sports');
+
+define('DB_HOST', $envHost);
+define('DB_USER', $envUser);
+define('DB_PASS', $envPass);
+define('DB_NAME', $envName);
 
 try {
     // Create PDO connection
@@ -55,7 +60,23 @@ try {
     $err_code = $e->getCode();
     $err_msg = $e->getMessage();
     
-    // Default styling wrapper
+    // Check if the request is an API request (return clean JSON instead of HTML)
+    $isApi = (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/api/') !== false)
+          || (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false)
+          || (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false);
+
+    if ($isApi) {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => false,
+            'message' => 'เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล MySQL: ' . $err_msg,
+            'error_code' => $err_code
+        ], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+    
+    // Default styling wrapper for direct web visits
     $html_start = "
     <div style='font-family: \"Prompt\", -apple-system, sans-serif; text-align: center; margin-top: 80px; padding: 30px; border-radius: 20px; max-width: 600px; margin-left: auto; margin-right: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.08); background-color: #ffffff; border: 1px solid #e2e8f0;'>
         <div style='width: 60px; height: 60px; background-color: #fff5f5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;'>

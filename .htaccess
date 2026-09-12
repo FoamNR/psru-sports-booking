@@ -1,0 +1,30 @@
+# ==============================================================================
+# PSRU Sports Booking System - Apache Configuration
+# ==============================================================================
+
+# Disable directory browsing
+<IfModule mod_autoindex.c>
+    Options -Indexes
+</IfModule>
+
+# Set default charset
+AddDefaultCharset UTF-8
+
+# Protect sensitive files from direct web access
+<FilesMatch "^(\.env|\.gitignore|\.git|database\.sql|composer\.json|composer\.lock|package\.json|.*\.md)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Protect backend directories (config, models, controllers, includes) from direct browsing
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^config/ - [F,L]
+    RewriteRule ^models/ - [F,L]
+    RewriteRule ^controllers/ - [F,L]
+</IfModule>

@@ -73,6 +73,10 @@
                     <i data-lucide="calendar-x" class="w-4 h-4"></i>
                     <span>+ กำหนดวันปิดใช้งานสนาม</span>
                 </button>
+                <button onclick="openReportHistoryModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center space-x-1.5 border border-gray-200">
+                    <i data-lucide="history" class="w-4 h-4 text-gray-500"></i>
+                    <span>ประวัติรายงานปัญหา</span>
+                </button>
                 <button onclick="openReportModal()" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center space-x-1.5">
                     <i data-lucide="alert-triangle" class="w-4 h-4"></i>
                     <span>รายงานปัญหาหน้างาน</span>
@@ -293,10 +297,36 @@
         </div>
     </div>
 
+    <!-- MODAL 5: ประวัติรายงานปัญหาหน้างานของสตาฟ -->
+    <div id="report-history-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3 flex-shrink-0">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center">
+                        <i data-lucide="history" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-900 text-base">ประวัติการรายงานปัญหาหน้างาน</h3>
+                        <p class="text-[11px] text-gray-400">รายการแจ้งซ่อมบำรุงและปัญหาหน้างานที่ส่งไปยังผู้ดูแลระบบส่วนกลาง</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('report-history-modal')" class="text-gray-400 hover:bg-gray-100 p-1 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="overflow-y-auto flex-grow divide-y divide-gray-100 pr-1 text-xs space-y-3" id="staff-report-history-list">
+                <!-- Dynamically loaded via JS -->
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end flex-shrink-0">
+                <button onclick="closeModal('report-history-modal')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-5 rounded-xl text-xs transition-all">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
     <footer class="bg-white border-t border-gray-200 py-4 w-full text-center text-xs text-gray-400 mt-12">
         © 2026 มหาวิทยาลัยราชภัฏพิบูลสงคราม. แผงควบคุมระบบปฏิบัติการหน้างานของเจ้าหน้าที่ศูนย์กีฬา
     </footer>
 
-    <script src="../assets/js/pages/staff-dashboard.js?v=20260907_01"></script>
+    <script src="../assets/js/pages/staff-dashboard.js?v=20260912_01"></script>
 </body>
 </html>

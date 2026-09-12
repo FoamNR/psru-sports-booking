@@ -2,6 +2,8 @@ checkAuth('admin');
 
 let usersList = [];
 let courtsList = [];
+let reportsList = [];
+let reportStatusFilter = 'all';
 
 // Tab Switching
 function switchTab(sectionId) {
@@ -12,7 +14,7 @@ function switchTab(sectionId) {
 
     const buttons = document.querySelectorAll('.tab-menu-btn');
     buttons.forEach(b => {
-        b.className = "tab-menu-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-medium text-gray-500 hover:bg-gray-50 hover:text-psruGreen transition-all text-left";
+        b.className = "tab-menu-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium text-gray-500 hover:bg-gray-50 hover:text-psruGreen transition-all text-left";
     });
     
     let btnId = '';
@@ -23,10 +25,14 @@ function switchTab(sectionId) {
         btnId = 'menu-closures';
         fetchAdminClosures();
     }
+    else if (sectionId === 'reports-section') {
+        btnId = 'menu-reports';
+        fetchAdminReports();
+    }
     
     const activeBtn = document.getElementById(btnId);
     if (activeBtn) {
-        activeBtn.className = "tab-menu-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold bg-green-50 text-psruGreen transition-all text-left";
+        activeBtn.className = "tab-menu-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold bg-green-50 text-psruGreen transition-all text-left";
     }
 }
 
@@ -44,6 +50,7 @@ async function fetchAdminData() {
             renderCourts(courtsList);
             renderAdminClosureCourts(courtsList);
             await fetchAdminClosures();
+            await fetchAdminReports();
         }
     } catch (e) {
         showAlert('danger', 'เกิดข้อผิดพลาดในการโหลดข้อมูลหลังบ้าน');
@@ -703,11 +710,498 @@ async function deleteAdminClosure(id) {
     }
 }
 
+// ==========================================
+// 🛠️ ADMIN ISSUE / MAINTENANCE REPORTS MANAGEMENT
+// ==========================================
+
+function formatThaiDateTime(dateStr) {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr.replace(' ', 'T'));
+    if (isNaN(d.getTime())) return dateStr;
+    const datePart = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+    const timePart = d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.';
+    return `${datePart} ${timePart}`;
+}
+
+// Fetch reports from API
+async function fetchAdminReports() {
+    const tbody = document.getElementById('reports-table-body');
+    if (!tbody) return;
+
+    try {
+        const res = await fetch('../api/reports/list.php');
+        const data = await res.json();
+
+        if (data.success) {
+            reportsList = data.reports || [];
+            const stats = data.stats || { total: 0, pending: 0, resolved: 0 };
+
+            // Update KPI cards
+            const totalEl = document.getElementById('reports-kpi-total');
+            const pendingEl = document.getElementById('reports-kpi-pending');
+            const resolvedEl = document.getElementById('reports-kpi-resolved');
+
+            if (totalEl) totalEl.textContent = `${stats.total} รายการ`;
+            if (pendingEl) pendingEl.textContent = `${stats.pending} รายการ`;
+            if (resolvedEl) resolvedEl.textContent = `${stats.resolved} รายการ`;
+
+            // Update Sidebar Pending Badge
+            const sidebarBadge = document.getElementById('sidebar-pending-reports-badge');
+            if (sidebarBadge) {
+                if (stats.pending > 0) {
+                    sidebarBadge.textContent = stats.pending;
+                    sidebarBadge.classList.remove('hidden');
+                } else {
+                    sidebarBadge.classList.add('hidden');
+                }
+            }
+
+            filterReports();
+        } else {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-red-500 font-medium">ไม่สามารถโหลดข้อมูลรายงานปัญหาได้: ${data.message || ''}</td></tr>`;
+        }
+    } catch (e) {
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-red-500 font-medium">เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์</td></tr>`;
+        }
+    }
+}
+
+// Set status filter (all / pending / resolved)
+function setReportStatusFilter(status) {
+    reportStatusFilter = status;
+
+    const btns = document.querySelectorAll('.report-filter-btn');
+    btns.forEach(b => {
+        b.className = "report-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:text-gray-900 transition-all";
+    });
+
+    const activeBtn = document.getElementById(`report-filter-${status}`);
+    if (activeBtn) {
+        activeBtn.className = "report-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-gray-900 shadow-sm transition-all";
+    }
+
+    filterReports();
+}
+
+// Filter reports by search keyword, status, and campus
+function filterReports() {
+    const searchInput = document.getElementById('report-search-input');
+    const campusSelect = document.getElementById('report-campus-filter');
+    
+    const kw = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const selectedCampus = campusSelect ? campusSelect.value : '';
+
+    let filtered = reportsList.filter(rep => {
+        // Status filter
+        if (reportStatusFilter !== 'all' && rep.status !== reportStatusFilter) {
+            return false;
+        }
+
+        // Campus filter
+        if (selectedCampus && String(rep.campus_id) !== String(selectedCampus)) {
+            return false;
+        }
+
+        // Keyword filter
+        if (kw) {
+            const courtName = (rep.court_name || '').toLowerCase();
+            const desc = (rep.description || '').toLowerCase();
+            const staffName = `${rep.staff_first_name || ''} ${rep.staff_last_name || ''}`.toLowerCase();
+            const username = (rep.staff_username || '').toLowerCase();
+            const sportType = (rep.sport_type || '').toLowerCase();
+            const campusName = (rep.campus_name || '').toLowerCase();
+
+            if (!courtName.includes(kw) && !desc.includes(kw) && !staffName.includes(kw) && !username.includes(kw) && !sportType.includes(kw) && !campusName.includes(kw)) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    renderReports(filtered);
+}
+
+// Render reports table
+function renderReports(reports) {
+    const tbody = document.getElementById('reports-table-body');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    if (!reports || reports.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="p-8 text-center text-gray-400">
+                    <div class="flex flex-col items-center justify-center space-y-2">
+                        <i data-lucide="inbox" class="w-8 h-8 text-gray-300"></i>
+                        <span class="text-xs">ไม่พบรายการรายงานปัญหาตามเงื่อนไขที่เลือก</span>
+                    </div>
+                </td>
+            </tr>
+        `;
+        if (window.lucide) lucide.createIcons();
+        return;
+    }
+
+    reports.forEach(rep => {
+        const dateTimeText = formatThaiDateTime(rep.created_at);
+        const campusBadge = rep.campus_id == 1 
+            ? '<span class="bg-green-100 text-green-800 text-[10px] font-bold px-1.5 py-0.5 rounded">ทะเลแก้ว</span>' 
+            : '<span class="bg-purple-100 text-purple-800 text-[10px] font-bold px-1.5 py-0.5 rounded">วังจันทน์</span>';
+
+        let courtStatusBadge = '';
+        if (rep.court_status === 'ready') {
+            courtStatusBadge = '<span class="text-green-700 bg-green-50 text-[10px] font-semibold px-2 py-0.5 rounded-md border border-green-200">🟢 พร้อมใช้งาน</span>';
+        } else if (rep.court_status === 'maintenance') {
+            courtStatusBadge = '<span class="text-amber-800 bg-amber-50 text-[10px] font-semibold px-2 py-0.5 rounded-md border border-amber-200">🟡 ปิดปรับปรุง</span>';
+        } else {
+            courtStatusBadge = '<span class="text-red-700 bg-red-50 text-[10px] font-semibold px-2 py-0.5 rounded-md border border-red-200">🔴 ปิดบริการ</span>';
+        }
+
+        const isPending = rep.status === 'pending';
+        const statusBadge = isPending
+            ? `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-red-50 text-red-700 border border-red-200">
+                 <span class="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5 animate-pulse"></span>
+                 รอดำเนินการ
+               </span>`
+            : `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-green-50 text-green-700 border border-green-200">
+                 <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>
+                 แก้ไขแล้ว
+               </span>`;
+
+        const statusActionBtn = isPending
+            ? `<button onclick="toggleReportStatus(${rep.id}, 'pending')" class="px-2.5 py-1 text-[11px] font-bold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-all flex items-center space-x-1" title="มาร์กเป็นแก้ไขปัญหาแล้ว">
+                 <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                 <span>มาร์กแก้ไขแล้ว</span>
+               </button>`
+            : `<button onclick="toggleReportStatus(${rep.id}, 'resolved')" class="px-2.5 py-1 text-[11px] font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-lg transition-all flex items-center space-x-1" title="เปลี่ยนสถานะกลับเป็นรอดำเนินการ">
+                 <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                 <span>รอดำเนินการ</span>
+               </button>`;
+
+        const tr = document.createElement('tr');
+        tr.className = `hover:bg-gray-50/80 transition-colors ${isPending ? 'bg-red-50/10' : ''}`;
+        tr.innerHTML = `
+            <td class="p-3.5 font-medium text-gray-700 whitespace-nowrap">
+                <span class="block">${dateTimeText}</span>
+                <span class="text-[10px] text-gray-400 font-mono">#REP-${rep.id}</span>
+            </td>
+            <td class="p-3.5">
+                <div class="space-y-1">
+                    <div class="flex items-center space-x-1.5">
+                        <span class="font-bold text-gray-900">${rep.court_name}</span>
+                        ${campusBadge}
+                    </div>
+                    <div>${courtStatusBadge}</div>
+                </div>
+            </td>
+            <td class="p-3.5 max-w-xs">
+                <div class="p-2 bg-gray-50/90 rounded-xl border border-gray-100 text-gray-800 text-xs line-clamp-2 leading-relaxed" title="${rep.description}">
+                    ${rep.description}
+                </div>
+            </td>
+            <td class="p-3.5">
+                <div>
+                    <span class="font-semibold text-gray-900 block">${rep.staff_first_name} ${rep.staff_last_name}</span>
+                    <span class="text-[10px] text-gray-500 font-mono block">@${rep.staff_username} · 📞 ${rep.staff_phone || '-'}</span>
+                </div>
+            </td>
+            <td class="p-3.5 whitespace-nowrap">
+                ${statusBadge}
+            </td>
+            <td class="p-3.5 text-right whitespace-nowrap">
+                <div class="flex items-center justify-end space-x-1.5">
+                    ${statusActionBtn}
+                    <button onclick="viewReportDetails(${rep.id})" class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg border border-gray-200 transition-all" title="ดูรายละเอียดปัญหา">
+                        <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button onclick="deleteReport(${rep.id}, '${rep.court_name.replace(/'/g, "\\'")}')" class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg border border-gray-200 transition-all" title="ลบรายการ">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    if (window.lucide) lucide.createIcons();
+}
+
+// Toggle report status
+async function toggleReportStatus(id, currentStatus) {
+    const targetStatus = currentStatus === 'pending' ? 'resolved' : 'pending';
+    const actionText = targetStatus === 'resolved' ? 'บันทึกเป็น "แก้ไขปัญหาแล้ว"' : 'เปลี่ยนกลับเป็น "รอดำเนินการ"';
+
+    try {
+        const res = await fetch('../api/reports/update-status.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id, status: targetStatus })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+            showAlert('success', result.message);
+            await fetchAdminReports();
+            
+            // If modal is open, refresh modal
+            const modal = document.getElementById('report-detail-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                viewReportDetails(id);
+            }
+
+            Swal.fire({
+                title: 'สำเร็จ!',
+                text: result.message,
+                icon: 'success',
+                confirmButtonColor: '#01a715',
+                customClass: { popup: 'rounded-3xl' }
+            });
+        } else {
+            Swal.fire({
+                title: 'ไม่สำเร็จ',
+                text: result.message,
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+                customClass: { popup: 'rounded-3xl' }
+            });
+        }
+    } catch (e) {
+        Swal.fire({
+            title: 'เกิดข้อผิดพลาด',
+            text: 'เกิดข้อผิดพลาดในการอัปเดตสถานะรายงาน',
+            icon: 'error',
+            confirmButtonColor: '#ef4444',
+            customClass: { popup: 'rounded-3xl' }
+        });
+    }
+}
+
+// Delete Report
+async function deleteReport(id, courtName) {
+    const swalRes = await Swal.fire({
+        title: 'ยืนยันการลบรายงาน?',
+        html: `ต้องการลบรายการรายงานปัญหาของ <strong>"${courtName}"</strong> (#REP-${id}) ออกจากระบบใช่หรือไม่?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'ยืนยันลบข้อมูล',
+        cancelButtonText: 'ยกเลิก',
+        customClass: { popup: 'rounded-3xl' }
+    });
+
+    if (!swalRes.isConfirmed) return;
+
+    try {
+        const res = await fetch('../api/reports/delete.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+            showAlert('success', result.message);
+            closeModal('report-detail-modal');
+            await fetchAdminReports();
+            Swal.fire({
+                title: 'ลบสำเร็จ!',
+                text: result.message,
+                icon: 'success',
+                confirmButtonColor: '#01a715',
+                customClass: { popup: 'rounded-3xl' }
+            });
+        } else {
+            Swal.fire({
+                title: 'ไม่สำเร็จ',
+                text: result.message,
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+                customClass: { popup: 'rounded-3xl' }
+            });
+        }
+    } catch (e) {
+        Swal.fire({
+            title: 'เกิดข้อผิดพลาด',
+            text: 'เกิดข้อผิดพลาดในการลบรายการรายงาน',
+            icon: 'error',
+            confirmButtonColor: '#ef4444',
+            customClass: { popup: 'rounded-3xl' }
+        });
+    }
+}
+
+// View report details in modal
+function viewReportDetails(id) {
+    const rep = reportsList.find(r => r.id == id);
+    if (!rep) return;
+
+    document.getElementById('rd-report-id').textContent = `#REP-${rep.id}`;
+    document.getElementById('rd-datetime').textContent = formatThaiDateTime(rep.created_at);
+
+    // Status Badge
+    const isPending = rep.status === 'pending';
+    const statusBadgeContainer = document.getElementById('rd-status-badge');
+    if (statusBadgeContainer) {
+        statusBadgeContainer.innerHTML = isPending
+            ? `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
+                 <span class="w-2 h-2 bg-red-500 rounded-full mr-1.5 animate-pulse"></span> รอดำเนินการ
+               </span>`
+            : `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
+                 <span class="w-2 h-2 bg-green-500 rounded-full mr-1.5"></span> ดำเนินการแก้ไขแล้ว
+               </span>`;
+    }
+
+    // Court Info
+    document.getElementById('rd-court-name').textContent = rep.court_name;
+    const courtStatusEl = document.getElementById('rd-court-status-badge');
+    if (courtStatusEl) {
+        if (rep.court_status === 'ready') {
+            courtStatusEl.innerHTML = '<span class="text-green-700 bg-green-50 text-[10px] font-bold px-2 py-0.5 rounded border border-green-200">🟢 พร้อมใช้งาน</span>';
+        } else if (rep.court_status === 'maintenance') {
+            courtStatusEl.innerHTML = '<span class="text-amber-800 bg-amber-50 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-200">🟡 ปิดปรับปรุง</span>';
+        } else {
+            courtStatusEl.innerHTML = '<span class="text-red-700 bg-red-50 text-[10px] font-bold px-2 py-0.5 rounded border border-red-200">🔴 ปิดบริการ</span>';
+        }
+    }
+
+    document.getElementById('rd-court-meta').textContent = `วิทยาเขต: ${rep.campus_name} · ประเภทกีฬา: ${rep.sport_type} (${rep.location_type === 'indoor' ? 'ในร่ม' : 'กลางแจ้ง'})`;
+    document.getElementById('rd-description').textContent = rep.description;
+
+    // Staff Info
+    document.getElementById('rd-staff-name').textContent = `${rep.staff_first_name} ${rep.staff_last_name} (@${rep.staff_username})`;
+    document.getElementById('rd-staff-contact').textContent = `เบอร์โทรติดต่อ: ${rep.staff_phone || '-'} | อีเมล: ${rep.staff_email || '-'}`;
+
+    // Modal Status Toggle Button
+    const toggleBtn = document.getElementById('rd-toggle-status-btn');
+    if (toggleBtn) {
+        if (isPending) {
+            toggleBtn.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-psruGreen hover:bg-green-700 text-white transition-all shadow-sm flex items-center justify-center space-x-1.5";
+            toggleBtn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> <span>มาร์กเป็น "แก้ไขปัญหาเสร็จสิ้น"</span>';
+            toggleBtn.onclick = () => toggleReportStatus(rep.id, 'pending');
+        } else {
+            toggleBtn.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white transition-all shadow-sm flex items-center justify-center space-x-1.5";
+            toggleBtn.innerHTML = '<i data-lucide="rotate-ccw" class="w-4 h-4"></i> <span>เปลี่ยนกลับเป็น "รอดำเนินการ"</span>';
+            toggleBtn.onclick = () => toggleReportStatus(rep.id, 'resolved');
+        }
+    }
+
+    // Quick Action: Maintenance toggle
+    const maintBtn = document.getElementById('rd-quick-maintenance-btn');
+    const maintText = document.getElementById('rd-quick-maintenance-text');
+    if (maintBtn && maintText) {
+        if (rep.court_status === 'maintenance') {
+            maintText.textContent = 'ปรับสถานะสนามเป็น "พร้อมใช้งาน"';
+            maintBtn.className = "flex-1 py-2 px-3 bg-green-50 hover:bg-green-100 text-green-800 text-[11px] font-semibold rounded-xl border border-green-200 transition-all flex items-center justify-center space-x-1";
+            maintBtn.onclick = () => quickUpdateCourtStatus(rep.court_id, rep.court_name, 'ready');
+        } else {
+            maintText.textContent = 'ปรับสนามเป็น "ปิดปรับปรุง"';
+            maintBtn.className = "flex-1 py-2 px-3 bg-amber-50 hover:bg-amber-100 text-amber-800 text-[11px] font-semibold rounded-xl border border-amber-200 transition-all flex items-center justify-center space-x-1";
+            maintBtn.onclick = () => quickUpdateCourtStatus(rep.court_id, rep.court_name, 'maintenance');
+        }
+    }
+
+    // Quick Action: Closure
+    const closureBtn = document.getElementById('rd-quick-closure-btn');
+    if (closureBtn) {
+        closureBtn.onclick = () => openClosureFromReport(rep.court_id, `ซ่อมบำรุงตามรายงาน: ${rep.description}`);
+    }
+
+    document.getElementById('report-detail-modal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+}
+
+// Quick Update Court Status (ready / maintenance / closed)
+async function quickUpdateCourtStatus(courtId, courtName, newStatus) {
+    const statusLabels = {
+        'ready': 'พร้อมใช้งาน (🟢 Ready)',
+        'maintenance': 'ปิดปรับปรุงชั่วคราว (🟡 Maintenance)',
+        'closed': 'ปิดให้บริการ (🔴 Closed)'
+    };
+
+    const confirmRes = await Swal.fire({
+        title: 'ยืนยันปรับสถานะสนาม?',
+        html: `คุณต้องการปรับสถานะของสนาม <strong>"${courtName}"</strong> เป็น <strong>"${statusLabels[newStatus] || newStatus}"</strong> ใช่หรือไม่?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#01a715',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'ยืนยันปรับสถานะ',
+        cancelButtonText: 'ยกเลิก',
+        customClass: { popup: 'rounded-3xl' }
+    });
+
+    if (!confirmRes.isConfirmed) return;
+
+    try {
+        const res = await fetch('../api/admin/court-action.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'update_court_status',
+                court_id: courtId,
+                court_status: newStatus
+            })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+            showAlert('success', result.message);
+            await fetchAdminData();
+            await fetchAdminReports();
+            closeModal('report-detail-modal');
+
+            Swal.fire({
+                title: 'สำเร็จ!',
+                text: result.message,
+                icon: 'success',
+                confirmButtonColor: '#01a715',
+                customClass: { popup: 'rounded-3xl' }
+            });
+        } else {
+            Swal.fire({
+                title: 'ไม่สำเร็จ',
+                text: result.message,
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+                customClass: { popup: 'rounded-3xl' }
+            });
+        }
+    } catch (e) {
+        Swal.fire({
+            title: 'เกิดข้อผิดพลาด',
+            text: 'เกิดข้อผิดพลาดในการปรับสถานะสนาม',
+            icon: 'error',
+            confirmButtonColor: '#ef4444',
+            customClass: { popup: 'rounded-3xl' }
+        });
+    }
+}
+
+// Open Closure modal with pre-selected court from report
+function openClosureFromReport(courtId, reason) {
+    closeModal('report-detail-modal');
+    openAdminClosureModal();
+
+    const courtSelect = document.getElementById('admin-closure-court-id');
+    const reasonInput = document.getElementById('admin-closure-reason');
+
+    if (courtSelect) courtSelect.value = courtId;
+    if (reasonInput) reasonInput.value = reason;
+}
+
 // Bind search input to filter users
-document.getElementById('search-users-input').addEventListener('input', filterUsers);
+const searchUsersInput = document.getElementById('search-users-input');
+if (searchUsersInput) {
+    searchUsersInput.addEventListener('input', filterUsers);
+}
 
 // Bootstrapping
 window.addEventListener('DOMContentLoaded', async () => {
     await fetchAdminData();
     if (window.lucide) lucide.createIcons();
 });
+

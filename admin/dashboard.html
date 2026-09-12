@@ -67,6 +67,14 @@
                 <i data-lucide="calendar-x" class="w-4 h-4"></i>
                 <span>วันปิดให้บริการสนาม</span>
             </button>
+
+            <button onclick="switchTab('reports-section')" id="menu-reports" class="tab-menu-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium text-gray-500 hover:bg-gray-50 hover:text-psruGreen transition-all text-left">
+                <div class="flex items-center space-x-3">
+                    <i data-lucide="alert-circle" class="w-4 h-4 text-red-500"></i>
+                    <span>รายงานปัญหาหน้างาน</span>
+                </div>
+                <span id="sidebar-pending-reports-badge" class="hidden bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">0</span>
+            </button>
         </div>
 
         <!-- Admin Profile footer -->
@@ -239,6 +247,107 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100 font-medium" id="admin-closures-table-body">
                             <!-- Loaded dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 5: รายงานปัญหาหน้างานและแจ้งซ่อมบำรุง -->
+        <!-- ========================================== -->
+        <section id="reports-section" class="admin-panel space-y-6 hidden">
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h2 class="font-bold text-base text-gray-950 flex items-center">
+                        <i data-lucide="alert-circle" class="w-5 h-5 mr-2 text-red-500"></i>
+                        <span>รายงานปัญหาหน้างานและแจ้งซ่อมบำรุง</span>
+                    </h2>
+                    <p class="text-xs text-gray-500 mt-0.5">รับแจ้งปัญหา อุปกรณ์ชำรุด หรือเหตุขัดข้องที่เจ้าหน้าที่ดูแลสนามส่งเข้ามา</p>
+                </div>
+                <button onclick="fetchAdminReports()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold py-2 px-3.5 rounded-xl transition-all flex items-center space-x-1.5 self-start sm:self-center">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                    <span>รีเฟรชข้อมูล</span>
+                </button>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-400 font-bold block">รายงานปัญหาทั้งหมด</span>
+                        <span id="reports-kpi-total" class="text-xl font-bold text-gray-900">0 รายการ</span>
+                    </div>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5">
+                    <div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-400 font-bold block">รอดำเนินการ / ยังไม่แก้ไข</span>
+                        <span id="reports-kpi-pending" class="text-xl font-bold text-red-600">0 รายการ</span>
+                    </div>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5">
+                    <div class="w-10 h-10 rounded-xl bg-green-50 text-psruGreen flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-400 font-bold block">ประสานงานแก้ไขแล้ว</span>
+                        <span id="reports-kpi-resolved" class="text-xl font-bold text-psruGreen">0 รายการ</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters & Table Container -->
+            <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 space-y-4">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <!-- Status Filter Tabs -->
+                    <div class="flex flex-wrap items-center gap-1.5 bg-gray-100 p-1 rounded-xl w-max">
+                        <button onclick="setReportStatusFilter('all')" id="report-filter-all" class="report-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-gray-900 shadow-sm transition-all">ทั้งหมด</button>
+                        <button onclick="setReportStatusFilter('pending')" id="report-filter-pending" class="report-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:text-gray-900 transition-all flex items-center space-x-1">
+                            <span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
+                            <span>รอดำเนินการ</span>
+                        </button>
+                        <button onclick="setReportStatusFilter('resolved')" id="report-filter-resolved" class="report-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:text-gray-900 transition-all flex items-center space-x-1">
+                            <span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
+                            <span>แก้ไขแล้ว</span>
+                        </button>
+                    </div>
+
+                    <!-- Search and Campus filter -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <select id="report-campus-filter" onchange="filterReports()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-psruGreen">
+                            <option value="">ทุกวิทยาเขต</option>
+                            <option value="1">ศูนย์ทะเลแก้ว</option>
+                            <option value="2">ศูนย์ส่วนวังจันทน์</option>
+                        </select>
+                        <div class="relative w-full sm:w-56">
+                            <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-gray-400"></i>
+                            <input type="text" id="report-search-input" onkeyup="filterReports()" placeholder="ค้นหาสนาม, ปัญหา, สตาฟ..." class="w-full bg-gray-50 pl-9 pr-4 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-psruGreen">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-400 font-bold uppercase border-b border-gray-100">
+                                <th class="p-3.5">วัน-เวลาที่แจ้ง</th>
+                                <th class="p-3.5">สนามกีฬา / วิทยาเขต</th>
+                                <th class="p-3.5">รายละเอียดปัญหา / อุปกรณ์ชำรุด</th>
+                                <th class="p-3.5">เจ้าหน้าที่ผู้รายงาน</th>
+                                <th class="p-3.5">สถานะ</th>
+                                <th class="p-3.5 text-right">การจัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 font-medium" id="reports-table-body">
+                            <!-- Dynamically loaded via JS -->
                         </tbody>
                     </table>
                 </div>
@@ -447,6 +556,80 @@
         </div>
     </div>
 
-    <script src="../assets/js/pages/admin-dashboard.js?v=20260907_01"></script>
+    <!-- MODAL 5: แสดงรายละเอียดรายงานปัญหาหน้างาน -->
+    <div id="report-detail-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-red-50 text-red-600 flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-900 text-base">รายละเอียดรายงานปัญหา</h3>
+                        <span id="rd-report-id" class="text-[10px] text-gray-400 font-mono"></span>
+                    </div>
+                </div>
+                <button onclick="closeModal('report-detail-modal')" class="text-gray-400 hover:bg-gray-100 p-1 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="space-y-4 text-xs">
+                <!-- Status & Date -->
+                <div class="flex items-center justify-between bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                    <div>
+                        <span class="text-[10px] text-gray-400 font-bold block">วัน-เวลาที่ส่งรายงาน</span>
+                        <span id="rd-datetime" class="font-semibold text-gray-800"></span>
+                    </div>
+                    <div id="rd-status-badge">
+                        <!-- Badge -->
+                    </div>
+                </div>
+
+                <!-- Court Info -->
+                <div class="bg-gray-50/80 p-3.5 rounded-2xl border border-gray-100 space-y-1.5">
+                    <span class="text-[10px] text-gray-400 font-bold uppercase block mb-1">ข้อมูลสนามกีฬา</span>
+                    <div class="flex items-center justify-between">
+                        <span id="rd-court-name" class="font-bold text-gray-900 text-sm"></span>
+                        <span id="rd-court-status-badge"></span>
+                    </div>
+                    <p class="text-gray-500 text-[11px]" id="rd-court-meta"></p>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <span class="text-[10px] text-gray-400 font-bold uppercase block mb-1.5">รายละเอียดปัญหา / อาการชำรุดที่พบ</span>
+                    <div id="rd-description" class="p-3.5 bg-red-50/40 border border-red-100 rounded-2xl text-gray-800 font-medium whitespace-pre-wrap leading-relaxed"></div>
+                </div>
+
+                <!-- Staff Info -->
+                <div class="bg-gray-50 p-3.5 rounded-2xl border border-gray-100">
+                    <span class="text-[10px] text-gray-400 font-bold uppercase block mb-1">ข้อมูลเจ้าหน้าที่ผู้รายงาน</span>
+                    <p class="font-semibold text-gray-900" id="rd-staff-name"></p>
+                    <p class="text-gray-500 text-[11px] mt-0.5" id="rd-staff-contact"></p>
+                </div>
+
+                <!-- Actions in modal -->
+                <div class="border-t border-gray-100 pt-4 space-y-2">
+                    <div class="flex space-x-2">
+                        <button id="rd-toggle-status-btn" class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center space-x-1.5"></button>
+                        <button onclick="closeModal('report-detail-modal')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 px-4 rounded-xl text-xs transition-all">ปิด</button>
+                    </div>
+                    
+                    <!-- Quick actions row -->
+                    <div class="flex items-center justify-between gap-2 pt-1 border-t border-dashed border-gray-100">
+                        <button id="rd-quick-maintenance-btn" class="flex-1 py-2 px-3 bg-amber-50 hover:bg-amber-100 text-amber-800 text-[11px] font-semibold rounded-xl border border-amber-200 transition-all flex items-center justify-center space-x-1">
+                            <i data-lucide="wrench" class="w-3.5 h-3.5"></i>
+                            <span id="rd-quick-maintenance-text">ปรับสนามเป็น "ปิดปรับปรุง"</span>
+                        </button>
+                        <button id="rd-quick-closure-btn" class="flex-1 py-2 px-3 bg-red-50 hover:bg-red-100 text-red-700 text-[11px] font-semibold rounded-xl border border-red-200 transition-all flex items-center justify-center space-x-1">
+                            <i data-lucide="calendar-x" class="w-3.5 h-3.5"></i>
+                            <span>กำหนดวันปิดให้บริการ</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/pages/admin-dashboard.js?v=20260912_01"></script>
 </body>
 </html>

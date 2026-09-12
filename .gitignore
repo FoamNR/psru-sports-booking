@@ -4,6 +4,7 @@
 # User uploaded files
 uploads/*
 !uploads/.gitkeep
+!uploads/.htaccess
 uploads/courts/*
 !uploads/courts/.gitkeep
 

@@ -592,6 +592,73 @@ function openReportModal() {
     document.getElementById('report-modal').classList.remove('hidden');
 }
 
+// Open and load Report History Modal for Staff
+async function openReportHistoryModal() {
+    const modal = document.getElementById('report-history-modal');
+    const container = document.getElementById('staff-report-history-list');
+    if (!modal || !container) return;
+
+    modal.classList.remove('hidden');
+    container.innerHTML = `
+        <div class="py-8 text-center text-gray-400">
+            <i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto mb-2 text-psruGreen"></i>
+            <span>กำลังโหลดประวัติการแจ้งปัญหา...</span>
+        </div>
+    `;
+    if (window.lucide) lucide.createIcons();
+
+    try {
+        const res = await fetch('../api/reports/list.php');
+        const data = await res.json();
+
+        if (data.success && data.reports) {
+            container.innerHTML = '';
+            if (data.reports.length === 0) {
+                container.innerHTML = `
+                    <div class="py-8 text-center text-gray-400">
+                        <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 text-gray-300"></i>
+                        <span>ยังไม่มีรายการแจ้งปัญหาในระบบ</span>
+                    </div>
+                `;
+            } else {
+                data.reports.forEach(rep => {
+                    const isPending = rep.status === 'pending';
+                    const dateStr = rep.created_at ? new Date(rep.created_at.replace(' ', 'T')).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' น.' : '-';
+                    const campusBadge = rep.campus_id == 1 ? '<span class="text-[10px] bg-green-50 text-green-700 px-1.5 py-0.5 rounded font-bold">ทะเลแก้ว</span>' : '<span class="text-[10px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded font-bold">วังจันทน์</span>';
+                    
+                    const statusBadge = isPending
+                        ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-200"><span class="w-1.5 h-1.5 bg-red-500 rounded-full mr-1 animate-pulse"></span> รอดำเนินการ</span>`
+                        : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-200"><span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span> แก้ไขแล้ว</span>`;
+
+                    const item = document.createElement('div');
+                    item.className = "pt-3 pb-2 space-y-2";
+                    item.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-bold text-gray-900">${rep.court_name}</span>
+                                ${campusBadge}
+                            </div>
+                            <div>${statusBadge}</div>
+                        </div>
+                        <p class="text-gray-700 bg-gray-50 p-2.5 rounded-xl border border-gray-100 font-medium">${rep.description}</p>
+                        <div class="flex items-center justify-between text-[11px] text-gray-400">
+                            <span>ผู้แจ้ง: ${rep.staff_first_name} ${rep.staff_last_name}</span>
+                            <span>📅 ${dateStr}</span>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+        } else {
+            container.innerHTML = `<div class="py-6 text-center text-red-500">ไม่สามารถโหลดข้อมูลประวัติได้</div>`;
+        }
+    } catch (e) {
+        container.innerHTML = `<div class="py-6 text-center text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>`;
+    }
+
+    if (window.lucide) lucide.createIcons();
+}
+
 function closeModal(id) {
     document.getElementById(id).classList.add('hidden');
 }
@@ -621,3 +688,4 @@ window.addEventListener('DOMContentLoaded', async () => {
     await fetchStaffDashboard();
     if (window.lucide) lucide.createIcons();
 });
+

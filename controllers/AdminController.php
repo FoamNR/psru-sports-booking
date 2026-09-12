@@ -203,10 +203,14 @@ class AdminController extends BaseController {
                 $fileOriginal = $_FILES['court_image']['name'];
                 $fileExt = strtolower(pathinfo($fileOriginal, PATHINFO_EXTENSION));
                 
-                $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+                $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
                 if (in_array($fileExt, $allowed)) {
+                    $uploadDir = dirname(__DIR__) . '/uploads/courts/';
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0755, true);
+                    }
                     $uniqueName = uniqid('court_', true) . '.' . $fileExt;
-                    $dest = dirname(__DIR__) . '/uploads/courts/' . $uniqueName;
+                    $dest = $uploadDir . $uniqueName;
                     if (move_uploaded_file($fileTmp, $dest)) {
                         $imageName = $uniqueName;
                     }
@@ -255,10 +259,14 @@ class AdminController extends BaseController {
                 $fileOriginal = $_FILES['court_image']['name'];
                 $fileExt = strtolower(pathinfo($fileOriginal, PATHINFO_EXTENSION));
                 
-                $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+                $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
                 if (in_array($fileExt, $allowed)) {
+                    $uploadDir = dirname(__DIR__) . '/uploads/courts/';
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0755, true);
+                    }
                     $uniqueName = uniqid('court_', true) . '.' . $fileExt;
-                    $dest = dirname(__DIR__) . '/uploads/courts/' . $uniqueName;
+                    $dest = $uploadDir . $uniqueName;
                     if (move_uploaded_file($fileTmp, $dest)) {
                         $newImageName = $uniqueName;
                     }
@@ -282,6 +290,32 @@ class AdminController extends BaseController {
                 $this->json(['success' => true, 'message' => 'อัปเดตข้อมูลรายละเอียดสนามกีฬาสำเร็จเรียบร้อย!']);
             } catch (PDOException $e) {
                 $this->json(['success' => false, 'message' => 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' . $e->getMessage()]);
+            }
+        }
+
+        // 4. Update Court Status Action (e.g. ready / maintenance / closed)
+        if ($action === 'update_court_status') {
+            $input = $this->getInput();
+            $courtId = intval($input['court_id'] ?? $_POST['court_id'] ?? 0);
+            $courtStatus = trim($input['court_status'] ?? $_POST['court_status'] ?? '');
+
+            if ($courtId <= 0 || !in_array($courtStatus, ['ready', 'maintenance', 'closed'])) {
+                $this->json(['success' => false, 'message' => 'ข้อมูลสถานะสนามหรือรหัสสนามไม่ถูกต้อง']);
+            }
+
+            try {
+                $this->courtModel->updateStatus($courtId, $courtStatus);
+                $statusLabels = [
+                    'ready' => 'พร้อมใช้งาน',
+                    'maintenance' => 'ปิดปรับปรุงชั่วคราว',
+                    'closed' => 'ปิดให้บริการ'
+                ];
+                $this->json([
+                    'success' => true,
+                    'message' => 'อัปเดตสถานะสนามเป็น "' . ($statusLabels[$courtStatus] ?? $courtStatus) . '" สำเร็จ'
+                ]);
+            } catch (PDOException $e) {
+                $this->json(['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()]);
             }
         }
 

@@ -1,8 +1,8 @@
 -- PSRU Sports Database Schema & Initial Seed Data
 
--- 1. Create Database if not exists
-CREATE DATABASE IF NOT EXISTS psru_sports DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE psru_sports;
+-- 1. Database Creation (หมายเหตุ: หากใช้บนโฮสติ้ง cPanel/DirectAdmin ให้เลือกฐานข้อมูลของคุณก่อนนำเข้าไฟล์นี้)
+-- CREATE DATABASE IF NOT EXISTS psru_sports DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- USE psru_sports;
 
 -- 2. Create tables
 CREATE TABLE IF NOT EXISTS campuses (
