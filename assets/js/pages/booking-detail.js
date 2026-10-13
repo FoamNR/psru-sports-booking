@@ -182,6 +182,8 @@ async function fetchCourtDetail() {
                     else if (currentCourt.sport_type === 'football') icon = 'circle-dot';
                     else if (currentCourt.sport_type === 'tennis') icon = 'target';
                     else if (currentCourt.sport_type === 'basketball') icon = 'target';
+                    else if (currentCourt.sport_type === 'volleyball') icon = 'disc';
+                    else if (currentCourt.sport_type === 'petanque') icon = 'circle-dot';
                     
                     imageBox.innerHTML = `
                         <div class="w-full h-full bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center text-psruGreen">

@@ -17,6 +17,26 @@ if (courtId <= 0) {
 
 document.getElementById('edit-court-id').value = courtId;
 
+const sportSelect = document.getElementById('sport-type');
+const otherSportContainer = document.getElementById('other-sport-container');
+const customSportInput = document.getElementById('custom-sport-input');
+
+// Event listener for sport type selection toggle
+if (sportSelect) {
+    sportSelect.addEventListener('change', function() {
+        if (this.value === 'other') {
+            otherSportContainer?.classList.remove('hidden');
+            customSportInput?.setAttribute('required', 'required');
+            customSportInput?.focus();
+        } else {
+            otherSportContainer?.classList.add('hidden');
+            customSportInput?.removeAttribute('required');
+            if (customSportInput) customSportInput.value = '';
+        }
+        if (window.lucide) lucide.createIcons();
+    });
+}
+
 // Fetch details
 async function fetchCourtAndCampuses() {
     try {
@@ -30,6 +50,31 @@ async function fetchCourtAndCampuses() {
             adminData.campuses.forEach(camp => {
                 select.insertAdjacentHTML('beforeend', `<option value="${camp.id}">${camp.name}</option>`);
             });
+
+            // Populate existing custom sports from other courts into dropdown
+            if (adminData.courts && sportSelect) {
+                const knownValues = ['futsal', 'badminton', 'football', 'tennis', 'basketball', 'volleyball', 'petanque', 'other'];
+                const existingCustomSports = new Set();
+                adminData.courts.forEach(c => {
+                    if (c.sport_type && !knownValues.includes(c.sport_type)) {
+                        existingCustomSports.add(c.sport_type);
+                    }
+                });
+
+                const otherOption = sportSelect.querySelector('option[value="other"]');
+                existingCustomSports.forEach(sport => {
+                    if (!sportSelect.querySelector(`option[value="${sport}"]`)) {
+                        const opt = document.createElement('option');
+                        opt.value = sport;
+                        opt.textContent = sport;
+                        if (otherOption) {
+                            sportSelect.insertBefore(opt, otherOption);
+                        } else {
+                            sportSelect.appendChild(opt);
+                        }
+                    }
+                });
+            }
         }
         
         // 2. Fetch court detail
@@ -39,7 +84,34 @@ async function fetchCourtAndCampuses() {
         if (detailData.success) {
             const court = detailData.court;
             document.getElementById('court-name').value = court.name;
-            document.getElementById('sport-type').value = court.sport_type;
+            
+            // Set sport type (check if known or custom)
+            const knownValues = ['futsal', 'badminton', 'football', 'tennis', 'basketball', 'volleyball', 'petanque'];
+            if (knownValues.includes(court.sport_type)) {
+                sportSelect.value = court.sport_type;
+                otherSportContainer?.classList.add('hidden');
+                if (customSportInput) customSportInput.value = '';
+            } else {
+                let optionExists = false;
+                for (let opt of sportSelect.options) {
+                    if (opt.value === court.sport_type) {
+                        optionExists = true;
+                        break;
+                    }
+                }
+                if (optionExists) {
+                    sportSelect.value = court.sport_type;
+                    otherSportContainer?.classList.add('hidden');
+                } else {
+                    sportSelect.value = 'other';
+                    otherSportContainer?.classList.remove('hidden');
+                    if (customSportInput) {
+                        customSportInput.value = court.sport_type;
+                        customSportInput.setAttribute('required', 'required');
+                    }
+                }
+            }
+
             document.getElementById('campus-select').value = court.campus_id;
             
             if (court.location_type === 'indoor') {
@@ -78,7 +150,8 @@ fetchCourtAndCampuses();
 
 function handleFileSelect(input) {
     const preview = document.getElementById('file-preview-list');
-    if (input.files.length > 0) {
+    if (!preview) return;
+    if (input.files && input.files.length > 0) {
         preview.classList.remove('hidden');
         preview.innerHTML = `✓ เลือกรูปภาพใหม่แล้ว: ${input.files[0].name}`;
     } else {
@@ -99,6 +172,32 @@ document.getElementById('edit-court-form').addEventListener('submit', async func
     submitBtn.innerHTML = `⏳ กำลังบันทึกความเปลี่ยนแปลง...`;
     
     const formData = new FormData(this);
+
+    // Validate and set sport_type
+    const selectedSport = sportSelect ? sportSelect.value : '';
+    if (selectedSport === 'other') {
+        const customVal = customSportInput ? customSportInput.value.trim() : '';
+        if (!customVal) {
+            alertText.textContent = 'กรุณาระบุชื่อประเภทกีฬา/สนามในช่อง "อื่นๆ"';
+            alertBox.classList.remove('hidden');
+            Swal.fire({
+                title: 'ข้อมูลไม่ครบถ้วน',
+                text: 'กรุณาระบุชื่อประเภทกีฬา/สนามในช่อง "อื่นๆ"',
+                icon: 'warning',
+                confirmButtonColor: '#01a715',
+                customClass: { popup: 'rounded-3xl' }
+            });
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> <span>บันทึกความเปลี่ยนแปลง</span>`;
+            if (window.lucide) lucide.createIcons();
+            if (customSportInput) customSportInput.focus();
+            return;
+        }
+        formData.set('sport_type', customVal);
+    } else {
+        formData.set('sport_type', selectedSport);
+    }
+
     // Append checked facilities
     const checkedFacs = this.querySelectorAll('input[name="facilities[]"]:checked');
     formData.delete('facilities[]');
@@ -134,7 +233,7 @@ document.getElementById('edit-court-form').addEventListener('submit', async func
             });
             submitBtn.disabled = false;
             submitBtn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> <span>บันทึกความเปลี่ยนแปลง</span>`;
-            lucide.createIcons();
+            if (window.lucide) lucide.createIcons();
         }
     } catch (err) {
         alertText.textContent = "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์";
@@ -148,14 +247,17 @@ document.getElementById('edit-court-form').addEventListener('submit', async func
         });
         submitBtn.disabled = false;
         submitBtn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> <span>บันทึกความเปลี่ยนแปลง</span>`;
-        lucide.createIcons();
+        if (window.lucide) lucide.createIcons();
     }
 });
 
-// Bind file input change event
-document.getElementById('court-image-input').addEventListener('change', function() {
-    handleFileSelect(this);
-});
+// Bind file input change event safely
+const courtFileInput = document.getElementById('court-image-input') || document.getElementById('file-upload');
+if (courtFileInput) {
+    courtFileInput.addEventListener('change', function() {
+        handleFileSelect(this);
+    });
+}
 
 window.addEventListener('DOMContentLoaded', () => {
     if (window.lucide) lucide.createIcons();

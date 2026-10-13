@@ -152,6 +152,19 @@ function filterUsers() {
     });
 }
 
+function formatSportType(type) {
+    const map = {
+        'futsal': 'ฟุตซอล',
+        'badminton': 'แบดมินตัน',
+        'football': 'ฟุตบอล',
+        'tennis': 'เทนนิส',
+        'basketball': 'บาสเกตบอล',
+        'volleyball': 'วอลเลย์บอล',
+        'petanque': 'สนามเปตอง'
+    };
+    return map[type] || type || '-';
+}
+
 // Render Courts
 function renderCourts(courts) {
     const container = document.getElementById('courts-grid-container');
@@ -168,7 +181,7 @@ function renderCourts(courts) {
                 <div>
                     <span class="text-[10px] ${campus_color} px-2 py-0.5 rounded-md font-bold">${court.campus_name}</span>
                     <h3 class="font-bold text-sm text-gray-950 mt-1.5">${court.name}</h3>
-                    <p class="text-gray-500 mt-1">ประเภท: ${court.sport_type} · สถานะ: ${status_label}</p>
+                    <p class="text-gray-500 mt-1">ประเภท: ${formatSportType(court.sport_type)} · สถานะ: ${status_label}</p>
                 </div>
                 <div class="flex space-x-1">
                     <a href="edit-court.html?court_id=${court.id}" class="p-2 border border-gray-200 hover:border-blue-300 text-gray-600 bg-white rounded-xl inline-block shadow-sm" title="แก้ไขสนาม"><i data-lucide="edit-2" class="w-4 h-4"></i></a>
@@ -1068,7 +1081,7 @@ function viewReportDetails(id) {
         }
     }
 
-    document.getElementById('rd-court-meta').textContent = `วิทยาเขต: ${rep.campus_name} · ประเภทกีฬา: ${rep.sport_type} (${rep.location_type === 'indoor' ? 'ในร่ม' : 'กลางแจ้ง'})`;
+    document.getElementById('rd-court-meta').textContent = `วิทยาเขต: ${rep.campus_name} · ประเภทกีฬา: ${formatSportType(rep.sport_type)} (${rep.location_type === 'indoor' ? 'ในร่ม' : 'กลางแจ้ง'})`;
     document.getElementById('rd-description').textContent = rep.description;
 
     // Staff Info

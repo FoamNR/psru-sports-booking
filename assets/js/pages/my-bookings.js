@@ -82,6 +82,8 @@ function renderTabContent() {
         else if (booking.sport_type === 'football') icon = 'circle-dot';
         else if (booking.sport_type === 'tennis') icon = 'target';
         else if (booking.sport_type === 'basketball') icon = 'target';
+        else if (booking.sport_type === 'volleyball') icon = 'disc';
+        else if (booking.sport_type === 'petanque') icon = 'circle-dot';
         
         // Format dates nicely
         const options = { year: 'numeric', month: 'short', day: 'numeric' };

@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS courts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     campus_id INT NOT NULL,
     name VARCHAR(150) NOT NULL,
-    sport_type ENUM('futsal', 'badminton', 'football', 'tennis', 'basketball') NOT NULL,
+    sport_type VARCHAR(50) NOT NULL, -- เช่น futsal, badminton, football, tennis, basketball, volleyball, petanque หรืออื่นๆ
     description TEXT NULL,
     location_type ENUM('indoor', 'outdoor') NOT NULL,
     status ENUM('ready', 'maintenance', 'closed') DEFAULT 'ready' NOT NULL,

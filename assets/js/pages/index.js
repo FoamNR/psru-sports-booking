@@ -93,6 +93,8 @@ function renderCourts(courts) {
         else if (court.sport_type === 'football') icon = 'circle-dot';
         else if (court.sport_type === 'tennis') icon = 'target';
         else if (court.sport_type === 'basketball') icon = 'target';
+        else if (court.sport_type === 'volleyball') icon = 'disc';
+        else if (court.sport_type === 'petanque') icon = 'circle-dot';
         
         const imageTag = court.image_url && court.image_url !== 'mock_image.jpg' && court.image_url !== 'default_court.jpg'
             ? `<img src="uploads/courts/${court.image_url}" alt="${court.name}" class="w-full h-full object-cover">`

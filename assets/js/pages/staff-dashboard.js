@@ -203,6 +203,19 @@ function renderStaffBookings() {
     lucide.createIcons();
 }
 
+function formatSportType(type) {
+    const map = {
+        'futsal': 'ฟุตซอล',
+        'badminton': 'แบดมินตัน',
+        'football': 'ฟุตบอล',
+        'tennis': 'เทนนิส',
+        'basketball': 'บาสเกตบอล',
+        'volleyball': 'วอลเลย์บอล',
+        'petanque': 'สนามเปตอง'
+    };
+    return map[type] || type || '-';
+}
+
 // Render court readiness checkboxes
 function renderCourtsStatus(courts) {
     const list = document.getElementById('courts-status-list');
@@ -217,7 +230,7 @@ function renderCourtsStatus(courts) {
             <div class="border border-gray-100 rounded-xl p-3 bg-gray-50/50 flex items-center justify-between">
                 <div class="max-w-[60%]">
                     <h4 class="font-bold text-gray-900 truncate">${court.name}</h4>
-                    <p class="text-[10px] text-gray-400 mt-0.5">ประเภท: ${court.sport_type}</p>
+                    <p class="text-[10px] text-gray-400 mt-0.5">ประเภท: ${formatSportType(court.sport_type)}</p>
                 </div>
                 <select onchange="updateCourtStatus(this, ${court.id})" class="${select_class} font-semibold border-none py-1 px-2 rounded-lg text-[11px] focus:outline-none">
                     <option value="ready" ${court.status === 'ready' ? 'selected' : ''}>🟢 พร้อมใช้งาน</option>
